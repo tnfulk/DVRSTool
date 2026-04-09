@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DVRS In-Band Planner</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="planner">
+        <div class="intro">
+          <div>
+            <p class="eyebrow">Futurecom DVR-LX planning aid</p>
+            <h1>DVRS in-band planner</h1>
+            <p class="lede">Enter the mobile transmit range, review standard plan fit, and carry the preliminary proposal into an ordering summary.</p>
+          </div>
+          <img src="assets/800mhz-frequency-plans.png" alt="Extracted 800 MHz frequency plan reference diagram">
+        </div>
+
+        <form id="planner-form" class="input-grid">
+          <label>
+            Country
+            <select name="country">
+              <option>United States</option>
+              <option>Canada</option>
+            </select>
+          </label>
+          <label>
+            Mobile TX low MHz
+            <input name="mobile_tx_low_mhz" type="number" min="0" step="0.0001" value="806.0" required>
+          </label>
+          <label>
+            Mobile TX high MHz
+            <input name="mobile_tx_high_mhz" type="number" min="0" step="0.0001" value="807.0" required>
+          </label>
+          <label>
+            Manual mobile RX low MHz
+            <input name="mobile_rx_low_mhz" type="number" min="0" step="0.0001" placeholder="Optional">
+          </label>
+          <label>
+            Manual mobile RX high MHz
+            <input name="mobile_rx_high_mhz" type="number" min="0" step="0.0001" placeholder="Optional">
+          </label>
+          <label>
+            Actual DVRS TX low MHz
+            <input name="actual_licensed_dvrs_tx_low_mhz" type="number" min="0" step="0.0001" placeholder="Optional">
+          </label>
+          <label>
+            Actual DVRS TX high MHz
+            <input name="actual_licensed_dvrs_tx_high_mhz" type="number" min="0" step="0.0001" placeholder="Optional">
+          </label>
+          <label>
+            Actual DVRS RX low MHz
+            <input name="actual_licensed_dvrs_rx_low_mhz" type="number" min="0" step="0.0001" placeholder="Optional">
+          </label>
+          <label>
+            Actual DVRS RX high MHz
+            <input name="actual_licensed_dvrs_rx_high_mhz" type="number" min="0" step="0.0001" placeholder="Optional">
+          </label>
+          <label class="wide">
+            Agency notes
+            <textarea name="agency_notes" rows="3" placeholder="Project, agency, coordinator, or quote notes"></textarea>
+          </label>
+          <label class="toggle">
+            <input name="use_latest_ordering_ruleset" type="checkbox" checked>
+            Use latest ordering-guide ruleset
+          </label>
+          <button type="submit">Evaluate plans</button>
+        </form>
+      </section>
+
+      <section id="status-panel" class="status-panel" hidden></section>
+
+      <section class="results-layout">
+        <article class="panel">
+          <div class="panel-heading">
+            <p class="eyebrow">Input + system summary</p>
+            <h2>System</h2>
+          </div>
+          <div id="system-summary" class="empty-state">Run an evaluation to see the detected band, system pairing, and assumptions.</div>
+        </article>
+
+        <article class="panel matrix-panel">
+          <div class="panel-heading">
+            <p class="eyebrow">Standard configuration matrix</p>
+            <h2>Plans</h2>
+          </div>
+          <div id="plan-results" class="empty-state">All standard plans for the detected band will appear here.</div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-heading">
+            <p class="eyebrow">Ordering form summary</p>
+            <h2>Quote Draft</h2>
+          </div>
+          <div id="ordering-summary" class="empty-state">The best preliminary standard plan will populate this summary.</div>
+          <div class="panel-actions">
+            <button id="download-pdf" type="button" disabled>Generate ordering PDF</button>
+          </div>
+        </article>
+      </section>
+
+      <section class="notice">
+        <strong>Planning note:</strong> Standard in-band filters are mechanically tuned and custom plans need vendor review. A technically valid plan is not a licensing approval; coordinate through the appropriate FCC, ISED, APCO/IMS A, or vendor review path.
+      </section>
+    </main>
+
+    <script src="app.js" defer></script>
+  </body>
+</html>
