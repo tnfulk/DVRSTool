@@ -5,16 +5,17 @@ from typing import Any
 
 from .engine import DVRSCalculationEngine
 from .exceptions import DVRSBaseError, MissingDependencyError
-from .models import CalculationRequest, Country
+from .models import CalculationRequest, Country, SystemBandHint
 from .pdf_export import build_ordering_summary_pdf
 
 
 def create_app():
     try:
         from fastapi import Body, FastAPI, Request
+        from fastapi.exceptions import RequestValidationError
         from fastapi.responses import JSONResponse, RedirectResponse, Response
         from fastapi.staticfiles import StaticFiles
-        from pydantic import BaseModel, Field
+        from pydantic import AliasChoices, BaseModel, Field
     except ImportError as exc:
         raise MissingDependencyError(
             code="MISSING_FASTAPI_DEPENDENCY",
@@ -35,16 +36,38 @@ def create_app():
 
     class CalculationRequestModel(BaseModel):
         country: Country
-        mobile_tx_low_mhz: float = Field(..., gt=0)
-        mobile_tx_high_mhz: float = Field(..., gt=0)
+        mobile_tx_low_mhz: float | None = Field(default=None, gt=0)
+        mobile_tx_high_mhz: float | None = Field(default=None, gt=0)
+        system_band_hint: SystemBandHint | None = None
+        mobile_tx_700_low_mhz: float | None = Field(default=None, gt=0)
+        mobile_tx_700_high_mhz: float | None = Field(default=None, gt=0)
+        mobile_tx_800_low_mhz: float | None = Field(default=None, gt=0)
+        mobile_tx_800_high_mhz: float | None = Field(default=None, gt=0)
         mobile_rx_low_mhz: float | None = Field(default=None, gt=0)
         mobile_rx_high_mhz: float | None = Field(default=None, gt=0)
         use_latest_ordering_ruleset: bool = True
+        agency_name: str | None = None
+        quote_date: str | None = None
+        mobile_radio_type: str | None = None
+        control_head_type: str | None = None
+        msu_antenna_type: str | None = None
         agency_notes: str | None = None
-        actual_licensed_dvrs_tx_low_mhz: float | None = Field(default=None, gt=0)
-        actual_licensed_dvrs_tx_high_mhz: float | None = Field(default=None, gt=0)
-        actual_licensed_dvrs_rx_low_mhz: float | None = Field(default=None, gt=0)
-        actual_licensed_dvrs_rx_high_mhz: float | None = Field(default=None, gt=0)
+        actual_dvrs_tx_mhz: float | None = Field(
+            default=None,
+            gt=0,
+            validation_alias=AliasChoices(
+                "actual_dvrs_tx_mhz",
+                "actual_licensed_dvrs_tx_low_mhz",
+            ),
+        )
+        actual_dvrs_rx_mhz: float | None = Field(
+            default=None,
+            gt=0,
+            validation_alias=AliasChoices(
+                "actual_dvrs_rx_mhz",
+                "actual_licensed_dvrs_rx_low_mhz",
+            ),
+        )
 
     @app.exception_handler(DVRSBaseError)
     async def handle_dvrs_error(_: Request, exc: DVRSBaseError):
@@ -53,6 +76,58 @@ def create_app():
             content={
                 "status": "error",
                 "error": exc.to_dict(),
+            },
+        )
+
+    @app.exception_handler(RequestValidationError)
+    async def handle_request_validation_error(_: Request, exc: RequestValidationError):
+        field_errors = []
+        rule_violations = []
+        optional_numeric_fields = {
+            "mobile_rx_low_mhz",
+            "mobile_rx_high_mhz",
+            "actual_dvrs_tx_mhz",
+            "actual_dvrs_rx_mhz",
+        }
+        for error in exc.errors():
+            location = list(error.get("loc", []))
+            field_name = location[-1] if location else "request"
+            message = error.get("msg", "Invalid input.")
+            error_type = error.get("type", "validation_error")
+            input_value = error.get("input")
+            hint = None
+            if field_name in optional_numeric_fields:
+                hint = "If this optional field is not known, leave it blank instead of entering 0."
+            field_error = {
+                "field": field_name,
+                "location": location,
+                "message": message,
+                "type": error_type,
+                "input": input_value,
+            }
+            if hint:
+                field_error["hint"] = hint
+            field_errors.append(field_error)
+            rule_violation = {
+                "code": "INVALID_REQUEST_FIELD",
+                "message": f"{field_name}: {message}",
+                "details": field_error,
+            }
+            rule_violations.append(rule_violation)
+
+        return JSONResponse(
+            status_code=400,
+            content={
+                "status": "error",
+                "error": {
+                    "code": "INVALID_REQUEST_BODY",
+                    "message": "One or more inputs are invalid. Review the highlighted field guidance and confirm optional numeric fields are blank unless you know the licensed value.",
+                    "details": {
+                        "field_errors": field_errors,
+                        "exception_type": exc.__class__.__name__,
+                    },
+                    "rule_violations": rule_violations,
+                },
             },
         )
 
@@ -69,6 +144,16 @@ def create_app():
                         "exception_type": exc.__class__.__name__,
                         "exception_message": str(exc),
                     },
+                    "rule_violations": [
+                        {
+                            "code": "UNHANDLED_EXCEPTION",
+                            "message": "An unexpected server error occurred.",
+                            "details": {
+                                "exception_type": exc.__class__.__name__,
+                                "exception_message": str(exc),
+                            },
+                        }
+                    ],
                 },
             },
         )

@@ -15,6 +15,7 @@ class Country(str, Enum):
 class BandFamily(str, Enum):
     BAND_700 = "700 MHz"
     BAND_800 = "800 MHz"
+    BAND_700_800 = "700 and 800"
     VHF = "VHF"
     UHF_380 = "UHF 380-430"
     UHF_450 = "UHF 450-470"
@@ -24,6 +25,14 @@ class PairingSource(str, Enum):
     DETERMINISTIC = "deterministic"
     MANUAL_OVERRIDE = "manual_override"
     UNAVAILABLE = "unavailable"
+
+
+class SystemBandHint(str, Enum):
+    VHF = "VHF"
+    UHF = "UHF"
+    BAND_700_ONLY = "700 only"
+    BAND_800_ONLY = "800 only"
+    BAND_700_AND_800 = "700 and 800"
 
 
 class TechnicalStatus(str, Enum):
@@ -39,28 +48,43 @@ class RegulatoryStatus(str, Enum):
 
 
 @dataclass
+class RuleViolation:
+    code: str
+    message: str
+    details: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
 class FrequencyRange:
     low_mhz: float
     high_mhz: float
 
     @property
     def width_mhz(self) -> float:
-        return round(self.high_mhz - self.low_mhz, 4)
+        return round(self.high_mhz - self.low_mhz, 5)
 
 
 @dataclass
 class CalculationRequest:
     country: Country
-    mobile_tx_low_mhz: float
-    mobile_tx_high_mhz: float
+    mobile_tx_low_mhz: float | None
+    mobile_tx_high_mhz: float | None
+    system_band_hint: SystemBandHint | None = None
+    mobile_tx_700_low_mhz: float | None = None
+    mobile_tx_700_high_mhz: float | None = None
+    mobile_tx_800_low_mhz: float | None = None
+    mobile_tx_800_high_mhz: float | None = None
     mobile_rx_low_mhz: float | None = None
     mobile_rx_high_mhz: float | None = None
     use_latest_ordering_ruleset: bool = True
+    agency_name: str | None = None
+    quote_date: str | None = None
+    mobile_radio_type: str | None = None
+    control_head_type: str | None = None
+    msu_antenna_type: str | None = None
     agency_notes: str | None = None
-    actual_licensed_dvrs_tx_low_mhz: float | None = None
-    actual_licensed_dvrs_tx_high_mhz: float | None = None
-    actual_licensed_dvrs_rx_low_mhz: float | None = None
-    actual_licensed_dvrs_rx_high_mhz: float | None = None
+    actual_dvrs_tx_mhz: float | None = None
+    actual_dvrs_rx_mhz: float | None = None
 
 
 @dataclass
@@ -88,6 +112,11 @@ class TechnicalPlan:
     pair_direction: str
     min_separation_from_mobile_tx_mhz: float
     max_dvrs_passband_mhz: float
+    min_separation_from_mobile_rx_mhz: float | None = None
+    active_mobile_tx_window: tuple[float, float] | None = None
+    active_mobile_rx_window: tuple[float, float] | None = None
+    fixed_dvrs_tx_range: tuple[float, float] | None = None
+    fixed_dvrs_rx_range: tuple[float, float] | None = None
     requires_mobile_rx_range: bool = False
     rule_precision: str = "derived"
     notes: list[str] = field(default_factory=list)
@@ -104,6 +133,7 @@ class PlanResult:
     proposed_dvrs_rx_range: FrequencyRange | None
     mount_compatibility: list[str]
     failure_reasons: list[str] = field(default_factory=list)
+    rule_violations: list[RuleViolation] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     regulatory_reasons: list[str] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
@@ -115,8 +145,8 @@ class OrderingSummary:
     system_rx_range: FrequencyRange
     proposed_dvrs_tx_range: FrequencyRange | None
     proposed_dvrs_rx_range: FrequencyRange | None
-    actual_licensed_dvrs_tx_range: FrequencyRange | None
-    actual_licensed_dvrs_rx_range: FrequencyRange | None
+    actual_dvrs_tx_range: FrequencyRange | None
+    actual_dvrs_rx_range: FrequencyRange | None
     notes: list[str] = field(default_factory=list)
 
 

@@ -3,8 +3,11 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>DVRS In-Band Planner</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=20260409e">
   </head>
   <body>
     <main class="app-shell">
@@ -13,60 +16,136 @@
           <div>
             <p class="eyebrow">Futurecom DVR-LX planning aid</p>
             <h1>DVRS in-band planner</h1>
-            <p class="lede">Enter the mobile transmit range, review standard plan fit, and carry the preliminary proposal into an ordering summary.</p>
+            <p class="lede">Enter the system frequency details, review standard plan fit, and carry the preliminary proposal into a more complete ordering summary.</p>
           </div>
-          <img src="assets/800mhz-frequency-plans.png" alt="Extracted 800 MHz frequency plan reference diagram">
         </div>
 
-        <form id="planner-form" class="input-grid">
-          <label>
-            Country
-            <select name="country">
-              <option>United States</option>
-              <option>Canada</option>
-            </select>
-          </label>
-          <label>
-            Mobile TX low MHz
-            <input name="mobile_tx_low_mhz" type="number" min="0" step="0.0001" value="806.0" required>
-          </label>
-          <label>
-            Mobile TX high MHz
-            <input name="mobile_tx_high_mhz" type="number" min="0" step="0.0001" value="807.0" required>
-          </label>
-          <label>
-            Manual mobile RX low MHz
-            <input name="mobile_rx_low_mhz" type="number" min="0" step="0.0001" placeholder="Optional">
-          </label>
-          <label>
-            Manual mobile RX high MHz
-            <input name="mobile_rx_high_mhz" type="number" min="0" step="0.0001" placeholder="Optional">
-          </label>
-          <label>
-            Actual DVRS TX low MHz
-            <input name="actual_licensed_dvrs_tx_low_mhz" type="number" min="0" step="0.0001" placeholder="Optional">
-          </label>
-          <label>
-            Actual DVRS TX high MHz
-            <input name="actual_licensed_dvrs_tx_high_mhz" type="number" min="0" step="0.0001" placeholder="Optional">
-          </label>
-          <label>
-            Actual DVRS RX low MHz
-            <input name="actual_licensed_dvrs_rx_low_mhz" type="number" min="0" step="0.0001" placeholder="Optional">
-          </label>
-          <label>
-            Actual DVRS RX high MHz
-            <input name="actual_licensed_dvrs_rx_high_mhz" type="number" min="0" step="0.0001" placeholder="Optional">
-          </label>
-          <label class="wide">
-            Agency notes
-            <textarea name="agency_notes" rows="3" placeholder="Project, agency, coordinator, or quote notes"></textarea>
-          </label>
-          <label class="toggle">
-            <input name="use_latest_ordering_ruleset" type="checkbox" checked>
-            Use latest ordering-guide ruleset
-          </label>
-          <button type="submit">Evaluate plans</button>
+        <form id="planner-form" class="planner-form">
+          <section class="form-section required-section">
+            <div class="section-heading">
+              <p class="eyebrow">Required</p>
+              <h2>Planning Inputs</h2>
+            </div>
+            <div class="input-grid">
+              <label class="required-field">
+                Country
+                <select name="country" required>
+                  <option>United States</option>
+                  <option>Canada</option>
+                </select>
+              </label>
+              <label class="required-field">
+                Mobile TX Low (MHz)
+                <input name="mobile_tx_low_mhz" type="number" min="0" step="0.00001" value="806.0" required>
+              </label>
+              <label class="required-field">
+                Mobile TX High (MHz)
+                <input name="mobile_tx_high_mhz" type="number" min="0" step="0.00001" value="807.0" required>
+              </label>
+              <label>
+                System Bands
+                <select name="system_band_hint">
+                  <option value="">Auto-detect from inputs</option>
+                  <option>VHF</option>
+                  <option>UHF</option>
+                  <option>700 only</option>
+                  <option>800 only</option>
+                  <option>700 and 800</option>
+                </select>
+              </label>
+              <label class="mixed-band-field" hidden>
+                700 Mobile TX Low (MHz)
+                <input name="mobile_tx_700_low_mhz" type="number" min="0" step="0.00001" placeholder="Required for 700 and 800">
+              </label>
+              <label class="mixed-band-field" hidden>
+                700 Mobile TX High (MHz)
+                <input name="mobile_tx_700_high_mhz" type="number" min="0" step="0.00001" placeholder="Required for 700 and 800">
+              </label>
+              <label class="mixed-band-field" hidden>
+                800 Mobile TX Low (MHz)
+                <input name="mobile_tx_800_low_mhz" type="number" min="0" step="0.00001" placeholder="Required for 700 and 800">
+              </label>
+              <label class="mixed-band-field" hidden>
+                800 Mobile TX High (MHz)
+                <input name="mobile_tx_800_high_mhz" type="number" min="0" step="0.00001" placeholder="Required for 700 and 800">
+              </label>
+              <label>
+                System TX Low (MHz)
+                <input name="mobile_rx_low_mhz" type="number" min="0" step="0.00001" placeholder="Optional">
+              </label>
+              <label>
+                System TX High (MHz)
+                <input name="mobile_rx_high_mhz" type="number" min="0" step="0.00001" placeholder="Optional">
+              </label>
+              <label>
+                DVRS TX (MHz)
+                <input name="actual_dvrs_tx_mhz" type="number" min="0" step="0.00001" placeholder="Optional">
+              </label>
+              <label>
+                DVRS RX (MHz)
+                <input name="actual_dvrs_rx_mhz" type="number" min="0" step="0.00001" placeholder="Optional">
+              </label>
+            </div>
+          </section>
+
+          <section class="form-section optional-section">
+            <div class="section-heading">
+              <p class="eyebrow">Optional</p>
+              <h2>Ordering Details</h2>
+            </div>
+            <div class="input-grid">
+              <label>
+                Agency name
+                <input name="agency_name" type="text" placeholder="Optional">
+              </label>
+              <label>
+                Date
+                <input name="quote_date" type="date">
+              </label>
+              <label>
+                Mobile Radio Type
+                <select name="mobile_radio_type">
+                  <option value="">Select optional model</option>
+                  <option>APX5500</option>
+                  <option>APX6500</option>
+                  <option>APX7500 - Single Band</option>
+                  <option>APX7500 - Dual Band</option>
+                  <option>APX8500 - All Band</option>
+                </select>
+              </label>
+              <label>
+                Control Head Type
+                <select name="control_head_type">
+                  <option value="">Select optional head</option>
+                  <option>02</option>
+                  <option>03</option>
+                  <option>05</option>
+                  <option>07</option>
+                  <option>09</option>
+                </select>
+              </label>
+              <label>
+                Antenna Type
+                <select name="msu_antenna_type">
+                  <option value="">Select optional antenna</option>
+                  <option>Single Band</option>
+                  <option>All Band</option>
+                </select>
+              </label>
+              <label class="wide">
+                Agency notes
+                <textarea name="agency_notes" rows="3" placeholder="Project, agency, coordinator, or quote notes"></textarea>
+              </label>
+              <label class="toggle">
+                <input name="use_latest_ordering_ruleset" type="checkbox" checked>
+                Use latest ordering-guide ruleset
+              </label>
+            </div>
+          </section>
+
+          <div class="form-actions">
+            <button type="submit">Evaluate plans</button>
+          </div>
         </form>
       </section>
 
@@ -106,6 +185,6 @@
       </section>
     </main>
 
-    <script src="app.js" defer></script>
+    <script src="app.js?v=20260409e" defer></script>
   </body>
 </html>

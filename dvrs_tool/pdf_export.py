@@ -60,15 +60,17 @@ def build_ordering_summary_pdf(response: CalculationResponse) -> bytes:
     y -= 24
     text(MARGIN, y, "1. Agency Name:", bold=True)
     rule(135, y - 2, 345, y - 2)
+    text(138, y, request.agency_name or "", size=8)
     text(360, y, "2. Date (YY/MM/DD):", bold=True)
     rule(468, y - 2, PAGE_WIDTH - MARGIN, y - 2)
+    text(470, y, request.quote_date or "", size=8)
     y -= 26
     text(MARGIN, y, "3. DVRS/VRX Order Code:", bold=True)
     rule(178, y - 2, 345, y - 2)
     text(360, y, "4. Selected DVR/VRX Configuration:", bold=True)
     text(512, y, recommended_plan.display_name if recommended_plan else "No recommended plan", size=8)
     y -= 28
-    text(MARGIN, y, "5. Suitcase or Cabinet DVR Power Requirement:", bold=True)
+    text(MARGIN, y, "5. Power Requirement:", bold=True)
     rule(280, y - 2, PAGE_WIDTH - MARGIN, y - 2)
 
     y -= 30
@@ -116,11 +118,14 @@ def build_ordering_summary_pdf(response: CalculationResponse) -> bytes:
     y -= 130
     text(MARGIN, y, "8. Mobile Radio Type:", bold=True)
     rule(150, y - 2, 286, y - 2)
+    text(152, y, request.mobile_radio_type or "", size=8)
     text(304, y, "9. Control Head Type:", bold=True)
     rule(420, y - 2, PAGE_WIDTH - MARGIN, y - 2)
+    text(422, y, request.control_head_type or "", size=8)
     y -= 24
     text(MARGIN, y, "10. MSU Antenna Type:", bold=True)
     rule(164, y - 2, PAGE_WIDTH - MARGIN, y - 2)
+    text(166, y, request.msu_antenna_type or "", size=8)
 
     y -= 28
     text(MARGIN, y, "Special Notes:", bold=True)

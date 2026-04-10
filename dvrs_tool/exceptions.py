@@ -13,12 +13,14 @@ class DVRSBaseError(Exception):
     code: str
     message: str
     details: dict[str, Any] = field(default_factory=dict)
+    rule_violations: list[dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "code": self.code,
             "message": self.message,
             "details": self.details,
+            "rule_violations": self.rule_violations,
         }
 
     def __str__(self) -> str:

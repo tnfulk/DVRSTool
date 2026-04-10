@@ -40,6 +40,7 @@ Returned JSON shape:
           "proposed_dvrs_rx_range": { ... } | null,
           "mount_compatibility": [string],
           "failure_reasons": [string],
+          "rule_violations": [{ "code": string, "message": string, "details": object }],
           "warnings": [string],
           "regulatory_reasons": [string],
           "notes": [string]
@@ -50,8 +51,8 @@ Returned JSON shape:
         "system_rx_range": { ... },
         "proposed_dvrs_tx_range": { ... } | null,
         "proposed_dvrs_rx_range": { ... } | null,
-        "actual_licensed_dvrs_tx_range": { ... } | null,
-        "actual_licensed_dvrs_rx_range": { ... } | null,
+        "actual_dvrs_tx_range": { ... } | null,
+        "actual_dvrs_rx_range": { ... } | null,
         "notes": [string]
       },
       "errors": [object]
@@ -59,7 +60,8 @@ Returned JSON shape:
     "error": {
       "code": string,
       "message": string,
-      "details": object
+      "details": object,
+      "rule_violations": [{ "code": string, "message": string, "details": object }]
     }
   }
 """
@@ -112,24 +114,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="Optional free-form note included in the ordering summary.",
     )
     parser.add_argument(
-        "--actual-licensed-dvrs-tx-low",
+        "--dvrs-tx",
         type=float,
-        help="Optional lowest actually licensed DVRS TX frequency in MHz.",
+        help="Optional actual DVRS TX center frequency in MHz.",
     )
     parser.add_argument(
-        "--actual-licensed-dvrs-tx-high",
+        "--dvrs-rx",
         type=float,
-        help="Optional highest actually licensed DVRS TX frequency in MHz.",
-    )
-    parser.add_argument(
-        "--actual-licensed-dvrs-rx-low",
-        type=float,
-        help="Optional lowest actually licensed DVRS RX frequency in MHz.",
-    )
-    parser.add_argument(
-        "--actual-licensed-dvrs-rx-high",
-        type=float,
-        help="Optional highest actually licensed DVRS RX frequency in MHz.",
+        help="Optional actual DVRS RX center frequency in MHz.",
     )
     parser.add_argument(
         "--indent",
@@ -152,10 +144,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         mobile_rx_high_mhz=args.mobile_rx_high,
         use_latest_ordering_ruleset=args.use_latest_ordering_ruleset,
         agency_notes=args.agency_notes,
-        actual_licensed_dvrs_tx_low_mhz=args.actual_licensed_dvrs_tx_low,
-        actual_licensed_dvrs_tx_high_mhz=args.actual_licensed_dvrs_tx_high,
-        actual_licensed_dvrs_rx_low_mhz=args.actual_licensed_dvrs_rx_low,
-        actual_licensed_dvrs_rx_high_mhz=args.actual_licensed_dvrs_rx_high,
+        actual_dvrs_tx_mhz=args.dvrs_tx,
+        actual_dvrs_rx_mhz=args.dvrs_rx,
     )
 
     engine = DVRSCalculationEngine()
