@@ -60,6 +60,18 @@ This branch now includes a PyInstaller spec for a windowed desktop build:
 
 The packaged executable will be written under `dist\DVRSPlanner.exe`.
 
+## Use GitHub CLI in this workspace
+
+This Codex environment may inject invalid proxy variables that break `gh` API calls. Use the repo-local wrapper to clear those variables just for the command:
+
+```powershell
+.\gh-safe.ps1 auth status
+.\gh-safe.ps1 pr status
+.\gh-safe.ps1 pr create
+```
+
+The wrapper restores the original PowerShell environment after `gh` exits, so it is safe to use for normal GitHub auth, push, PR, and Actions workflows.
+
 ## Use the CLI
 
 Run the tool directly from PowerShell:
