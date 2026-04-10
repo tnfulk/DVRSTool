@@ -5,6 +5,9 @@ from __future__ import annotations
 from .models import BandFamily, Country, RegulatoryStatus, TechnicalPlan
 
 
+# Warning: changes to the published plan table must be explicitly confirmed.
+# If you edit TECHNICAL_PLANS, also update dvrs_tool/plan_table_guard.py
+# so the intentional-change guard reflects the approved table state.
 TECHNICAL_PLANS: dict[BandFamily, list[TechnicalPlan]] = {
     BandFamily.BAND_700: [
         TechnicalPlan(

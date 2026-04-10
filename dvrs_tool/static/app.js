@@ -127,8 +127,8 @@ function renderError(message) {
 function formatFieldLabel(field) {
   const labels = {
     country: "Country",
-    mobile_tx_low_mhz: "System Frequency Low",
-    mobile_tx_high_mhz: "System Frequency High",
+    mobile_tx_low_mhz: "Mobile TX Frequency Low",
+    mobile_tx_high_mhz: "Mobile TX Frequency High",
     system_band_hint: "System Frequency Configuration",
     mobile_rx_low_mhz: "System TX Low",
     mobile_rx_high_mhz: "System TX High",
@@ -634,7 +634,7 @@ function syncSystemBandFields() {
   ];
   const selectedMode = systemBandSelect?.value || "800 only";
   const mixedMode = selectedMode === "700 and 800";
-  const singleBandPrefix = selectedMode === "700 only" ? "700 MHz System Frequency" : "800 MHz System Frequency";
+  const singleBandPrefix = selectedMode === "700 only" ? "700 MHz Mobile TX Frequency" : "800 MHz Mobile TX Frequency";
   const modeChanged = lastSystemBandMode !== null && lastSystemBandMode !== selectedMode;
 
   if (singleBandLowLabel) {

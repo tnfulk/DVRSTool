@@ -721,30 +721,30 @@ class DVRSCalculationEngine:
         if plan.id == "700-B":
             return [
                 ("700-system-only", plan),
-                ("800-system-only", self._build_analog_800_variant(plan, "800-C")),
+                ("800-system-only", self._build_cross_band_variant(plan, BandFamily.BAND_800)),
                 ("700-and-800-system", plan),
             ]
         if plan.id == "700-C":
             return [
                 ("700-system-only", plan),
-                ("800-system-only", self._build_analog_800_variant(plan, "800-B")),
+                ("800-system-only", self._build_cross_band_variant(plan, BandFamily.BAND_800)),
                 ("700-and-800-system", plan),
             ]
         if plan.id == "800-A1":
             return [
-                ("700-system-only", self._build_analog_700_variant(plan, "700-B")),
+                ("700-system-only", self._build_cross_band_variant(plan, BandFamily.BAND_700)),
                 ("800-system-only", plan),
                 ("700-and-800-system", plan),
             ]
         if plan.id == "800-A2":
             return [
-                ("700-system-only", self._build_analog_700_variant(plan, "700-B")),
+                ("700-system-only", self._build_cross_band_variant(plan, BandFamily.BAND_700)),
                 ("800-system-only", plan),
                 ("700-and-800-system", plan),
             ]
         if plan.id == "800-B":
             return [
-                ("700-system-only", self._build_analog_700_variant(plan, "700-C")),
+                ("700-system-only", self._build_cross_band_variant(plan, BandFamily.BAND_700)),
                 ("800-system-only", plan),
                 ("700-and-800-system", plan),
             ]
@@ -876,67 +876,42 @@ class DVRSCalculationEngine:
             delta = self._round_freq(actual_tx.low_mhz - actual_rx.low_mhz)
         return delta == plan.pair_offset_mhz
 
-    def _build_analog_800_variant(self, plan: TechnicalPlan, analog_plan_id: str) -> TechnicalPlan:
-        analog_plan = next(
-            candidate
-            for candidate in TECHNICAL_PLANS[BandFamily.BAND_800]
-            if candidate.id == analog_plan_id
-        )
+    def _build_cross_band_variant(
+        self,
+        plan: TechnicalPlan,
+        system_band: BandFamily,
+    ) -> TechnicalPlan:
+        if system_band == BandFamily.BAND_700:
+            note = "Evaluated using the 700 MHz-only system model."
+        else:
+            note = "Evaluated using the 800 MHz-only system model."
         return replace(
             plan,
-            band_family=analog_plan.band_family,
-            dvrs_mode=analog_plan.dvrs_mode,
-            placement=analog_plan.placement,
-            mount_compatibility=list(analog_plan.mount_compatibility),
-            dvrs_rx_window=analog_plan.dvrs_rx_window,
-            dvrs_tx_window=analog_plan.dvrs_tx_window,
-            pair_offset_mhz=analog_plan.pair_offset_mhz,
-            pair_direction=analog_plan.pair_direction,
-            min_separation_from_mobile_tx_mhz=analog_plan.min_separation_from_mobile_tx_mhz,
-            max_dvrs_passband_mhz=analog_plan.max_dvrs_passband_mhz,
-            min_separation_from_mobile_rx_mhz=analog_plan.min_separation_from_mobile_rx_mhz,
-            active_mobile_tx_window=analog_plan.active_mobile_tx_window,
-            active_mobile_rx_window=analog_plan.active_mobile_rx_window,
-            fixed_dvrs_tx_range=analog_plan.fixed_dvrs_tx_range,
-            fixed_dvrs_rx_range=analog_plan.fixed_dvrs_rx_range,
-            requires_mobile_rx_range=analog_plan.requires_mobile_rx_range,
-            rule_precision=analog_plan.rule_precision,
+            placement=self._placement_for_system_model(plan, system_band),
             notes=list(plan.notes)
             + [
-                "Evaluated using the 800 MHz-only system model."
+                note
             ],
         )
 
-    def _build_analog_700_variant(self, plan: TechnicalPlan, analog_plan_id: str) -> TechnicalPlan:
-        analog_plan = next(
-            candidate
-            for candidate in TECHNICAL_PLANS[BandFamily.BAND_700]
-            if candidate.id == analog_plan_id
+    def _placement_for_system_model(
+        self,
+        plan: TechnicalPlan,
+        system_band: BandFamily,
+    ) -> str:
+        system_tx_window = (
+            plan.system_700_tx_range if system_band == BandFamily.BAND_700 else plan.system_800_tx_range
         )
-        return replace(
-            plan,
-            band_family=analog_plan.band_family,
-            dvrs_mode=analog_plan.dvrs_mode,
-            placement=analog_plan.placement,
-            mount_compatibility=list(analog_plan.mount_compatibility),
-            dvrs_rx_window=analog_plan.dvrs_rx_window,
-            dvrs_tx_window=analog_plan.dvrs_tx_window,
-            pair_offset_mhz=analog_plan.pair_offset_mhz,
-            pair_direction=analog_plan.pair_direction,
-            min_separation_from_mobile_tx_mhz=analog_plan.min_separation_from_mobile_tx_mhz,
-            max_dvrs_passband_mhz=analog_plan.max_dvrs_passband_mhz,
-            min_separation_from_mobile_rx_mhz=analog_plan.min_separation_from_mobile_rx_mhz,
-            active_mobile_tx_window=analog_plan.active_mobile_tx_window,
-            active_mobile_rx_window=analog_plan.active_mobile_rx_window,
-            fixed_dvrs_tx_range=analog_plan.fixed_dvrs_tx_range,
-            fixed_dvrs_rx_range=analog_plan.fixed_dvrs_rx_range,
-            requires_mobile_rx_range=analog_plan.requires_mobile_rx_range,
-            rule_precision=analog_plan.rule_precision,
-            notes=list(plan.notes)
-            + [
-                "Evaluated using the 700 MHz-only system model."
-            ],
-        )
+        dvrs_rx_window = plan.fixed_dvrs_rx_range or plan.dvrs_rx_window
+
+        if system_tx_window is None or dvrs_rx_window is None:
+            return plan.placement
+
+        if dvrs_rx_window[1] <= system_tx_window[0]:
+            return "below_mobile_tx"
+        if dvrs_rx_window[0] >= system_tx_window[1]:
+            return "above_mobile_tx"
+        return plan.placement
 
     def _build_interop_variant(self, plan: TechnicalPlan) -> TechnicalPlan | None:
         if plan.band_family == BandFamily.BAND_700:
@@ -1104,17 +1079,19 @@ class DVRSCalculationEngine:
         plan: TechnicalPlan,
     ) -> RuleViolation | None:
         active_summary = self._build_active_window_summary(request, system_summary, plan)
+        allowed_mobile_tx_window = self._system_tx_window_for_plan(plan, active_summary)
+        allowed_mobile_rx_window = self._system_rx_window_for_plan(plan, active_summary)
 
         if (
-            plan.active_mobile_tx_window is not None
-            and not self._range_within_window(active_summary.mobile_tx_range, plan.active_mobile_tx_window)
+            allowed_mobile_tx_window is not None
+            and not self._range_within_window(active_summary.mobile_tx_range, allowed_mobile_tx_window)
         ):
             return RuleViolation(
                 code="MOBILE_TX_OUTSIDE_ACTIVE_PLAN_WINDOW",
                 message=(
                     "Mobile TX range falls outside the plan's supported active mobile TX window. "
                     f"Mobile TX={self._format_range(active_summary.mobile_tx_range)}; "
-                    f"allowed window={self._format_window(plan.active_mobile_tx_window)}."
+                    f"allowed window={self._format_window(allowed_mobile_tx_window)}."
                 ),
                 details={
                     "plan_id": base_plan.id,
@@ -1123,14 +1100,14 @@ class DVRSCalculationEngine:
                         "low_mhz": active_summary.mobile_tx_range.low_mhz,
                         "high_mhz": active_summary.mobile_tx_range.high_mhz,
                     },
-                    "active_mobile_tx_window": self._window_details(plan.active_mobile_tx_window),
+                    "active_mobile_tx_window": self._window_details(allowed_mobile_tx_window),
                 },
             )
 
-        if active_summary.mobile_rx_range is None or plan.active_mobile_rx_window is None:
+        if active_summary.mobile_rx_range is None or allowed_mobile_rx_window is None:
             return None
 
-        if self._range_within_window(active_summary.mobile_rx_range, plan.active_mobile_rx_window):
+        if self._range_within_window(active_summary.mobile_rx_range, allowed_mobile_rx_window):
             return None
 
         return RuleViolation(
@@ -1138,7 +1115,7 @@ class DVRSCalculationEngine:
             message=(
                 "Mobile RX range falls outside the plan's supported active mobile RX window. "
                 f"Mobile RX={self._format_range(active_summary.mobile_rx_range)}; "
-                f"allowed window={self._format_window(plan.active_mobile_rx_window)}."
+                f"allowed window={self._format_window(allowed_mobile_rx_window)}."
             ),
             details={
                 "plan_id": base_plan.id,
@@ -1147,9 +1124,31 @@ class DVRSCalculationEngine:
                     "low_mhz": active_summary.mobile_rx_range.low_mhz,
                     "high_mhz": active_summary.mobile_rx_range.high_mhz,
                 },
-                "active_mobile_rx_window": self._window_details(plan.active_mobile_rx_window),
+                "active_mobile_rx_window": self._window_details(allowed_mobile_rx_window),
             },
         )
+
+    def _system_tx_window_for_plan(
+        self,
+        plan: TechnicalPlan,
+        system_summary: SystemSummary,
+    ) -> tuple[float, float] | None:
+        if system_summary.detected_band == BandFamily.BAND_700:
+            return plan.system_700_tx_range or plan.active_mobile_tx_window
+        if system_summary.detected_band == BandFamily.BAND_800:
+            return plan.system_800_tx_range or plan.active_mobile_tx_window
+        return plan.active_mobile_tx_window
+
+    def _system_rx_window_for_plan(
+        self,
+        plan: TechnicalPlan,
+        system_summary: SystemSummary,
+    ) -> tuple[float, float] | None:
+        if system_summary.detected_band == BandFamily.BAND_700:
+            return plan.system_700_rx_range or plan.active_mobile_rx_window
+        if system_summary.detected_band == BandFamily.BAND_800:
+            return plan.system_800_rx_range or plan.active_mobile_rx_window
+        return plan.active_mobile_rx_window
 
     def _propose_dvrs_rx(
         self,

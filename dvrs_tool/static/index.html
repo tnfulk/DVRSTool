@@ -7,7 +7,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>DVRS In-Band Planner</title>
-    <link rel="stylesheet" href="styles.css?v=20260410a">
+    <link rel="stylesheet" href="styles.css?v=20260410b">
   </head>
   <body>
     <main class="app-shell">
@@ -44,27 +44,27 @@
                 </select>
               </label>
               <label class="single-band-field">
-                <span data-single-band-low-label>800 MHz System Frequency Low (MHz)</span>
+                <span data-single-band-low-label>800 MHz Mobile TX Frequency Low (MHz)</span>
                 <input name="mobile_tx_low_mhz" type="number" min="0" step="0.00001" value="806.0" placeholder="Required" required>
               </label>
               <label class="single-band-field">
-                <span data-single-band-high-label>800 MHz System Frequency High (MHz)</span>
+                <span data-single-band-high-label>800 MHz Mobile TX Frequency High (MHz)</span>
                 <input name="mobile_tx_high_mhz" type="number" min="0" step="0.00001" value="807.0" placeholder="Required" required>
               </label>
               <label class="mixed-band-field" hidden>
-                700 MHz System Frequency Low (MHz)
+                700 MHz Mobile TX Frequency Low (MHz)
                 <input name="mobile_tx_700_low_mhz" type="number" min="0" step="0.00001" placeholder="Required for 700 and 800">
               </label>
               <label class="mixed-band-field" hidden>
-                700 MHz System Frequency High (MHz)
+                700 MHz Mobile TX Frequency High (MHz)
                 <input name="mobile_tx_700_high_mhz" type="number" min="0" step="0.00001" placeholder="Required for 700 and 800">
               </label>
               <label class="mixed-band-field" hidden>
-                800 MHz System Frequency Low (MHz)
+                800 MHz Mobile TX Frequency Low (MHz)
                 <input name="mobile_tx_800_low_mhz" type="number" min="0" step="0.00001" placeholder="Required for 700 and 800">
               </label>
               <label class="mixed-band-field" hidden>
-                800 MHz System Frequency High (MHz)
+                800 MHz Mobile TX Frequency High (MHz)
                 <input name="mobile_tx_800_high_mhz" type="number" min="0" step="0.00001" placeholder="Required for 700 and 800">
               </label>
               <label>
@@ -176,6 +176,6 @@
       </section>
     </main>
 
-    <script src="app.js?v=20260410a" defer></script>
+    <script src="app.js?v=20260410b" defer></script>
   </body>
 </html>

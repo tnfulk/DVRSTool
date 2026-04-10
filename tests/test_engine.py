@@ -105,6 +105,7 @@ class DVRSCalculationEngineTests(unittest.TestCase):
 
     def test_ordering_guide_windows_are_encoded_exactly_for_core_700_800_plans(self) -> None:
         plan_700_b = next(plan for plan in TECHNICAL_PLANS[BandFamily.BAND_700] if plan.id == "700-B")
+        plan_700_c = next(plan for plan in TECHNICAL_PLANS[BandFamily.BAND_700] if plan.id == "700-C")
         plan_800_a1 = next(plan for plan in TECHNICAL_PLANS[BandFamily.BAND_800] if plan.id == "800-A1")
         plan_800_a2 = next(plan for plan in TECHNICAL_PLANS[BandFamily.BAND_800] if plan.id == "800-A2")
         plan_800_b = next(plan for plan in TECHNICAL_PLANS[BandFamily.BAND_800] if plan.id == "800-B")
@@ -113,6 +114,10 @@ class DVRSCalculationEngineTests(unittest.TestCase):
         self.assertEqual(plan_700_b.active_mobile_tx_window, (802.0, 805.0))
         self.assertEqual(plan_700_b.fixed_dvrs_rx_range, (799.0, 802.0))
         self.assertEqual(plan_700_b.fixed_dvrs_tx_range, (769.0, 772.0))
+        self.assertEqual(plan_700_b.system_800_rx_range, (851.0, 869.0))
+        self.assertEqual(plan_700_b.system_800_tx_range, (806.0, 824.0))
+        self.assertEqual(plan_700_c.system_800_rx_range, (851.0, 869.0))
+        self.assertEqual(plan_700_c.system_800_tx_range, (806.0, 824.0))
         self.assertEqual(plan_800_a1.dvrs_rx_window, (816.0, 824.0))
         self.assertEqual(plan_800_a1.active_mobile_tx_window, (806.0, 819.0))
         self.assertEqual(plan_800_a1.dvrs_tx_window, (861.0, 869.0))
@@ -129,6 +134,90 @@ class DVRSCalculationEngineTests(unittest.TestCase):
         self.assertEqual(plan_800_b.dvrs_tx_window, (854.0, 869.0))
         self.assertEqual(plan_800_c.dvrs_rx_window, (806.0, 821.0))
         self.assertEqual(plan_800_c.dvrs_tx_window, (851.0, 866.0))
+
+    def test_active_mobile_window_validation_prefers_explicit_table_ranges(self) -> None:
+        request = CalculationRequest(
+            country=Country.UNITED_STATES,
+            mobile_tx_low_mhz=810.0,
+            mobile_tx_high_mhz=822.0,
+        )
+        system_summary = self.engine._build_system_summary(request, BandFamily.BAND_800)
+        plan_c = next(plan for plan in TECHNICAL_PLANS[BandFamily.BAND_700] if plan.id == "700-C")
+        analog_variant = self.engine._build_cross_band_variant(plan_c, BandFamily.BAND_800)
+
+        violation = self.engine._validate_active_mobile_windows(
+            request,
+            system_summary,
+            plan_c,
+            "800-system-only",
+            analog_variant,
+        )
+
+        self.assertIsNone(violation)
+
+    def test_700_c_800_only_uses_table_dvrs_ranges_instead_of_analog_800_ranges(self) -> None:
+        response = self.engine.evaluate(
+            CalculationRequest(
+                country=Country.UNITED_STATES,
+                mobile_tx_low_mhz=810.0,
+                mobile_tx_high_mhz=822.0,
+            )
+        )
+        plan_c = next(plan for plan in response.plan_results if plan.plan_id == "700-C")
+
+        self.assertEqual(plan_c.technical_status, TechnicalStatus.VALID)
+        self.assertEqual(plan_c.proposed_dvrs_rx_range.low_mhz, 802.0)
+        self.assertEqual(plan_c.proposed_dvrs_rx_range.high_mhz, 805.0)
+        self.assertEqual(plan_c.proposed_dvrs_tx_range.low_mhz, 772.0)
+        self.assertEqual(plan_c.proposed_dvrs_tx_range.high_mhz, 775.0)
+
+    def test_700_b_800_only_uses_table_dvrs_ranges_instead_of_analog_800_ranges(self) -> None:
+        response = self.engine.evaluate(
+            CalculationRequest(
+                country=Country.UNITED_STATES,
+                mobile_tx_low_mhz=810.0,
+                mobile_tx_high_mhz=811.0,
+            )
+        )
+        plan_b = next(plan for plan in response.plan_results if plan.plan_id == "700-B")
+
+        self.assertEqual(plan_b.technical_status, TechnicalStatus.VALID)
+        self.assertEqual(plan_b.proposed_dvrs_rx_range.low_mhz, 799.0)
+        self.assertEqual(plan_b.proposed_dvrs_rx_range.high_mhz, 802.0)
+        self.assertEqual(plan_b.proposed_dvrs_tx_range.low_mhz, 769.0)
+        self.assertEqual(plan_b.proposed_dvrs_tx_range.high_mhz, 772.0)
+
+    def test_800_a1_700_only_uses_table_dvrs_ranges_instead_of_analog_700_ranges(self) -> None:
+        response = self.engine.evaluate(
+            CalculationRequest(
+                country=Country.UNITED_STATES,
+                mobile_tx_low_mhz=803.0,
+                mobile_tx_high_mhz=804.0,
+            )
+        )
+        plan_a1 = next(plan for plan in response.plan_results if plan.plan_id == "800-A1")
+
+        self.assertEqual(plan_a1.technical_status, TechnicalStatus.VALID)
+        self.assertEqual(plan_a1.proposed_dvrs_rx_range.low_mhz, 816.0)
+        self.assertEqual(plan_a1.proposed_dvrs_rx_range.high_mhz, 824.0)
+        self.assertEqual(plan_a1.proposed_dvrs_tx_range.low_mhz, 861.0)
+        self.assertEqual(plan_a1.proposed_dvrs_tx_range.high_mhz, 869.0)
+
+    def test_800_a2_700_only_uses_table_dvrs_ranges_instead_of_analog_700_ranges(self) -> None:
+        response = self.engine.evaluate(
+            CalculationRequest(
+                country=Country.UNITED_STATES,
+                mobile_tx_low_mhz=803.0,
+                mobile_tx_high_mhz=804.0,
+            )
+        )
+        plan_a2 = next(plan for plan in response.plan_results if plan.plan_id == "800-A2")
+
+        self.assertEqual(plan_a2.technical_status, TechnicalStatus.VALID)
+        self.assertEqual(plan_a2.proposed_dvrs_rx_range.low_mhz, 809.0)
+        self.assertEqual(plan_a2.proposed_dvrs_rx_range.high_mhz, 814.0)
+        self.assertEqual(plan_a2.proposed_dvrs_tx_range.low_mhz, 854.0)
+        self.assertEqual(plan_a2.proposed_dvrs_tx_range.high_mhz, 859.0)
 
     def test_800_a1_accepts_spacing_valid_actual_pair(self) -> None:
         response = self.engine.evaluate(
