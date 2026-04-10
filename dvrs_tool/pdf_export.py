@@ -132,12 +132,12 @@ def build_ordering_summary_pdf(response: CalculationResponse) -> bytes:
     y = wrapped_text(
         MARGIN + 42,
         y,
-        "Before placing your order, follow up with Futurecom so the proper frequency plan can be identified and approved. This draft is a planning aid, not a licensing approval.",
+        "Before placing your order, follow up with Motorola Solutions so the proper frequency plan can be identified and approved. This draft is a planning aid, not a licensing approval.",
         width=90,
         size=8,
     )
     y -= 4
-    text(MARGIN, y, "Please email the completed form to sales@futurecom.com", size=8, bold=True)
+    text(MARGIN, y, "Please send the completed form to your Motorola Solutions representative.", size=8, bold=True)
 
     return _write_pdf("\n".join(lines))
 

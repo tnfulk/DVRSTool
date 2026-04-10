@@ -25,7 +25,7 @@ from .plan_data import TECHNICAL_PLANS, classify_regulatory_status
 
 
 class DVRSCalculationEngine:
-    """Evaluate Futurecom DVRS in-band planning scenarios."""
+    """Evaluate Motorola Solutions DVRS in-band planning scenarios."""
 
     MAX_INPUT_DECIMAL_PLACES = 5
     ACTUAL_DVRS_RANGE_HALF_WIDTH_MHZ = 0.5

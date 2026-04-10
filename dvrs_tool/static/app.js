@@ -144,8 +144,18 @@ function buildUserFriendlyError(error) {
   }
 
   const parts = [];
+  const seenParts = new Set();
+  const pushPart = (value) => {
+    const normalized = String(value || "").trim();
+    if (!normalized || seenParts.has(normalized)) {
+      return;
+    }
+    seenParts.add(normalized);
+    parts.push(normalized);
+  };
+
   if (error.message) {
-    parts.push(error.message);
+    pushPart(error.message);
   }
 
   const fieldErrors = error.details?.field_errors || [];
@@ -154,22 +164,22 @@ function buildUserFriendlyError(error) {
       const hint = fieldError.hint ? ` ${fieldError.hint}` : "";
       return `${formatFieldLabel(fieldError.field)}: ${fieldError.message}.${hint}`.trim();
     });
-    parts.push(fieldMessages.join(" "));
+    pushPart(fieldMessages.join(" "));
   }
 
   const violationMessages = (error.rule_violations || [])
     .map((violation) => violation.message)
     .filter(Boolean);
   if (!fieldErrors.length && violationMessages.length) {
-    parts.push(violationMessages.slice(0, 2).join(" "));
+    pushPart(violationMessages.slice(0, 2).join(" "));
   }
 
   if (error.details?.field && String(error.details.field).startsWith("actual_dvrs_")) {
-    parts.push("Confirm the optional DVRS frequency values are correct, or clear those fields and re-run the evaluation.");
+    pushPart("Confirm the optional DVRS frequency values are correct, or clear those fields and re-run the evaluation.");
   }
 
   if (error.details?.hint) {
-    parts.push(error.details.hint);
+    pushPart(error.details.hint);
   }
 
   return parts.filter(Boolean).join(" ");

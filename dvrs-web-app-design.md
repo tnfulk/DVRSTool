@@ -3,7 +3,7 @@
 ## 1. Constitution
 
 ### 1.1 Purpose
-Build a web-based application that helps a public-safety radio planner evaluate Futurecom DVR-LX 700 MHz and 800 MHz standard in-band configurations from minimal user input, then present:
+Build a web-based application that helps a public-safety radio planner evaluate Motorola Solutions DVR-LX 700 MHz and 800 MHz standard in-band configurations from minimal user input, then present:
 
 - technically valid DVR-LX TX/RX ranges
 - configurations that are not technically feasible
@@ -19,16 +19,16 @@ The app must never imply that a technically valid frequency plan is automaticall
 Every result must show why a plan passed or failed: band window, spacing rule, passband rule, pairing rule, or regulatory policy rule.
 
 3. Regulatory humility.
-The app is a planning aid, not legal advice and not a replacement for FCC/ISED coordination, APCO/IMS A, or Futurecom review.
+The app is a planning aid, not legal advice and not a replacement for FCC/ISED coordination, APCO/IMS A, or Motorola Solutions review.
 
 4. Vendor-faithful logic.
-Technical plan evaluation must follow the Futurecom ordering guide and in-band-operation guidance first, then layer country-specific regulatory checks on top.
+Technical plan evaluation must follow the Motorola Solutions ordering guide and in-band-operation guidance first, then layer country-specific regulatory checks on top.
 
 5. Modular rules engine.
 Technical validation and regulatory validation must be separate modules so rules can evolve independently.
 
 6. Ordering-guide fixed ranges first.
-When the Futurecom ordering guide lists fixed DVRS TX/RX ranges for a standard plan, those published ranges control the plan definition. The app should recommend the feasible DVRS sub-range inside the published plan range that satisfies the plan rules. Technical validity for that plan means at least one paired DVRS channel inside the published fixed range can satisfy the plan rules.
+When the Motorola Solutions ordering guide lists fixed DVRS TX/RX ranges for a standard plan, those published ranges control the plan definition. The app should recommend the feasible DVRS sub-range inside the published plan range that satisfies the plan rules. Technical validity for that plan means at least one paired DVRS channel inside the published fixed range can satisfy the plan rules.
 
 7. Return the surviving compliant sub-range.
 For every plan, whether it uses a fixed ordering-guide range or only a broader allowed window, the engine must search for the remaining paired DVRS sub-range that still satisfies that plan's spacing, window, and pairing rules. If the nominal DVRS window is close to, partially overlaps, or would otherwise conflict with the system frequencies, the app must shrink the recommendation to the surviving compliant sub-range instead of rejecting the plan solely because the full nominal range would not fit. Reject the plan only when no compliant paired sub-range remains.
@@ -42,7 +42,7 @@ The final output must look usable by radio technicians and procurement staff, no
 ### 1.3 Scope
 In scope:
 
-- Futurecom DVR-LX standard 700 MHz and 800 MHz in-band configurations
+- Motorola Solutions DVR-LX standard 700 MHz and 800 MHz in-band configurations
 - country toggle for `United States` and `Canada`
 - user input of the system frequency ranges actually available to the customer
 - explicit system-frequency configuration selection: `700 only`, `800 only`, or `700 and 800`
@@ -61,7 +61,7 @@ Out of scope for v1:
 - UHF technical plan support
 - direct FCC ULS or ISED license lookups
 - automatic frequency coordination
-- custom Futurecom filtering plans
+- custom Motorola Solutions filtering plans
 - cross-band configuration recommendation as the main output
 - final legal certification that a channel is assignable
 
@@ -77,7 +77,7 @@ Each configuration must end in one of these states:
 
 ### 2.1 Source Constraints Taken From the Attached PDFs
 
-The app must encode the following Futurecom guidance:
+The app must encode the following Motorola Solutions guidance:
 
 - Only standard frequency plans are standard offerings; anything else is custom.
 - In-band filters are mechanically tuned and cannot be re-tuned in the field.
@@ -297,7 +297,7 @@ The app should render three panes:
 - Use color plus text labels; color alone is not enough.
 - Every failed plan must expose the exact failing rule.
 - Every yellow/red regulatory status must show a disclaimer and source basis.
-- Show the Futurecom note that custom plans require vendor review.
+- Show the Motorola Solutions note that custom plans require vendor review.
 
 ### 2.9 Non-Functional Requirements
 
@@ -312,7 +312,7 @@ The app should render three panes:
 
 - Create a single-page web app using a modular front end such as React + TypeScript.
 - Define domain models for `BandFamily`, `TechnicalPlan`, `RegulatoryPolicy`, `EvaluationResult`, and `OrderSummary`.
-- Build a source-controlled plan-definition dataset from the Futurecom ordering guide.
+- Build a source-controlled plan-definition dataset from the Motorola Solutions ordering guide.
 
 Deliverable:
 
@@ -352,7 +352,7 @@ Deliverable:
 
 ### Phase 5. Validation and Expert Review
 
-- test sample cases from the Futurecom in-band-operation guide
+- test sample cases from the Motorola Solutions in-band-operation guide
 - compare results against at least a few known real-world band scenarios
 - review edge cases with a radio technician or coordinator
 
@@ -420,7 +420,7 @@ Attached documents used:
 
 Online sources reviewed for regulatory framing:
 
-- Futurecom / Motorola DVR-LX ordering-guide mirror:
+- Motorola Solutions DVR-LX ordering-guide mirror:
   - https://manuals.plus/m/79994c2ed840d6ccd9827e13cfef138ce4c5b89f6275934723d79f50c8dc679b
 - FCC Public Safety Pool:
   - https://www.law.cornell.edu/cfr/text/47/90.20
