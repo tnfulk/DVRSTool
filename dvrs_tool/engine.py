@@ -206,6 +206,8 @@ class DVRSCalculationEngine:
     def _resolve_system_band(self, request: CalculationRequest) -> BandFamily:
         if request.system_band_hint == SystemBandHint.BAND_700_AND_800:
             return BandFamily.BAND_700_800
+        if request.system_band_hint == SystemBandHint.BAND_700_ONLY:
+            return BandFamily.BAND_700
         if request.system_band_hint == SystemBandHint.BAND_800_ONLY:
             return BandFamily.BAND_800
         if request.mobile_tx_low_mhz is None or request.mobile_tx_high_mhz is None:
@@ -231,28 +233,7 @@ class DVRSCalculationEngine:
 
     def _detect_band(self, low_mhz: float, high_mhz: float) -> BandFamily:
         if low_mhz >= 799.0 and high_mhz <= 805.0:
-            raise UnsupportedBandError(
-                code="UNSUPPORTED_700_ONLY_SYSTEM",
-                message="Standard configuration plans do not support systems that only have 700 MHz channels.",
-                details={
-                    "mobile_tx_low_mhz": low_mhz,
-                    "mobile_tx_high_mhz": high_mhz,
-                    "supported_models": ["800 only", "700 and 800"],
-                    "rule": "700-only systems are not standard-plan candidates",
-                },
-                rule_violations=[
-                    {
-                        "code": "UNSUPPORTED_700_ONLY_SYSTEM",
-                        "message": "Standard configuration plans do not support systems that only have 700 MHz channels.",
-                        "details": {
-                            "mobile_tx_low_mhz": low_mhz,
-                            "mobile_tx_high_mhz": high_mhz,
-                            "supported_models": ["800 only", "700 and 800"],
-                            "rule": "700-only systems are not standard-plan candidates",
-                        },
-                    }
-                ],
-            )
+            return BandFamily.BAND_700
 
         if low_mhz >= 806.0 and high_mhz <= 824.0:
             return BandFamily.BAND_800
@@ -432,12 +413,7 @@ class DVRSCalculationEngine:
             self._evaluate_plan_variant(request, system_summary, plan, variant_label, variant_plan)
             for variant_label, variant_plan in self._plan_variants(plan)
         ]
-        selected_result = self._select_best_plan_result(request, plan, candidate_results)
-        selected_result.mobile_tx_range = system_summary.mobile_tx_range
-        selected_result.mobile_rx_range = system_summary.mobile_rx_range
-        selected_result.system_tx_range = system_summary.system_tx_range
-        selected_result.system_rx_range = system_summary.system_rx_range
-        return selected_result
+        return self._select_best_plan_result(request, plan, candidate_results)
 
     def _evaluate_plan_variant(
         self,
@@ -447,6 +423,38 @@ class DVRSCalculationEngine:
         variant_label: str,
         variant_plan: TechnicalPlan,
     ) -> PlanResult:
+        variant_system_summary = self._build_variant_system_summary(
+            request,
+            system_summary,
+            plan,
+            variant_label,
+            variant_plan,
+        )
+        if variant_system_summary is None:
+            mismatch = RuleViolation(
+                code="SYSTEM_MODEL_MISMATCH",
+                message=self._build_system_model_mismatch_message(variant_label),
+                details={"plan_id": plan.id, "variant": variant_label},
+            )
+            return self._attach_system_ranges(
+                PlanResult(
+                    plan_id=plan.id,
+                    display_name=plan.display_name,
+                    technical_status=TechnicalStatus.INVALID,
+                    regulatory_status=RegulatoryStatus.NOT_EVALUATED,
+                    confidence=0.0,
+                    proposed_dvrs_tx_range=None,
+                    proposed_dvrs_rx_range=None,
+                    mount_compatibility=variant_plan.mount_compatibility,
+                    failure_reasons=[mismatch.message],
+                    rule_violations=[mismatch],
+                    warnings=list(system_summary.warnings),
+                    notes=list(variant_plan.notes),
+                ),
+                system_summary,
+            )
+
+        system_summary = variant_system_summary
         warnings = list(system_summary.warnings)
         notes = list(variant_plan.notes)
         derived_pair_offset = self._derive_pair_offset_from_system(system_summary, variant_plan)
@@ -461,19 +469,22 @@ class DVRSCalculationEngine:
         if active_window_violation is not None:
             preview_rx = self._preview_plan_rx_range(variant_plan)
             preview_tx = self._preview_plan_tx_range(variant_plan, preview_rx, derived_pair_offset)
-            return PlanResult(
-                plan_id=plan.id,
-                display_name=plan.display_name,
-                technical_status=TechnicalStatus.INVALID,
-                regulatory_status=RegulatoryStatus.NOT_EVALUATED,
-                confidence=0.0,
-                proposed_dvrs_tx_range=preview_tx,
-                proposed_dvrs_rx_range=preview_rx,
-                mount_compatibility=variant_plan.mount_compatibility,
-                failure_reasons=[active_window_violation.message],
-                rule_violations=[active_window_violation],
-                warnings=warnings,
-                notes=notes,
+            return self._attach_system_ranges(
+                PlanResult(
+                    plan_id=plan.id,
+                    display_name=plan.display_name,
+                    technical_status=TechnicalStatus.INVALID,
+                    regulatory_status=RegulatoryStatus.NOT_EVALUATED,
+                    confidence=0.0,
+                    proposed_dvrs_tx_range=preview_tx,
+                    proposed_dvrs_rx_range=preview_rx,
+                    mount_compatibility=variant_plan.mount_compatibility,
+                    failure_reasons=[active_window_violation.message],
+                    rule_violations=[active_window_violation],
+                    warnings=warnings,
+                    notes=notes,
+                ),
+                system_summary,
             )
 
         if variant_plan.requires_mobile_rx_range and system_summary.mobile_rx_range is None:
@@ -482,19 +493,22 @@ class DVRSCalculationEngine:
                 message="Manual mobile RX input is required for this duplex plan.",
                 details={"plan_id": plan.id, "band_family": plan.band_family.value, "variant": variant_label},
             )
-            return PlanResult(
-                plan_id=plan.id,
-                display_name=plan.display_name,
-                technical_status=TechnicalStatus.INVALID,
-                regulatory_status=RegulatoryStatus.NOT_EVALUATED,
-                confidence=0.0,
-                proposed_dvrs_tx_range=None,
-                proposed_dvrs_rx_range=None,
-                mount_compatibility=variant_plan.mount_compatibility,
-                failure_reasons=[violation.message],
-                rule_violations=[violation],
-                warnings=warnings,
-                notes=notes + ["No proposal computed because duplex pairing could not be inferred safely."],
+            return self._attach_system_ranges(
+                PlanResult(
+                    plan_id=plan.id,
+                    display_name=plan.display_name,
+                    technical_status=TechnicalStatus.INVALID,
+                    regulatory_status=RegulatoryStatus.NOT_EVALUATED,
+                    confidence=0.0,
+                    proposed_dvrs_tx_range=None,
+                    proposed_dvrs_rx_range=None,
+                    mount_compatibility=variant_plan.mount_compatibility,
+                    failure_reasons=[violation.message],
+                    rule_violations=[violation],
+                    warnings=warnings,
+                    notes=notes + ["No proposal computed because duplex pairing could not be inferred safely."],
+                ),
+                system_summary,
             )
 
         proposed_dvrs_passband = min(
@@ -519,19 +533,22 @@ class DVRSCalculationEngine:
                     "requested_dvrs_passband_mhz": proposed_dvrs_passband,
                 },
             )
-            return PlanResult(
-                plan_id=plan.id,
-                display_name=plan.display_name,
-                technical_status=TechnicalStatus.INVALID,
-                regulatory_status=RegulatoryStatus.NOT_EVALUATED,
-                confidence=0.0,
-                proposed_dvrs_tx_range=None,
-                proposed_dvrs_rx_range=None,
-                mount_compatibility=variant_plan.mount_compatibility,
-                failure_reasons=[violation.message],
-                rule_violations=[violation],
-                warnings=warnings,
-                notes=notes,
+            return self._attach_system_ranges(
+                PlanResult(
+                    plan_id=plan.id,
+                    display_name=plan.display_name,
+                    technical_status=TechnicalStatus.INVALID,
+                    regulatory_status=RegulatoryStatus.NOT_EVALUATED,
+                    confidence=0.0,
+                    proposed_dvrs_tx_range=None,
+                    proposed_dvrs_rx_range=None,
+                    mount_compatibility=variant_plan.mount_compatibility,
+                    failure_reasons=[violation.message],
+                    rule_violations=[violation],
+                    warnings=warnings,
+                    notes=notes,
+                ),
+                system_summary,
             )
 
         proposed_tx = self._propose_dvrs_tx(proposed_rx, variant_plan, derived_pair_offset)
@@ -553,19 +570,22 @@ class DVRSCalculationEngine:
                     "pair_direction": variant_plan.pair_direction,
                 },
             )
-            return PlanResult(
-                plan_id=plan.id,
-                display_name=plan.display_name,
-                technical_status=TechnicalStatus.INVALID,
-                regulatory_status=RegulatoryStatus.NOT_EVALUATED,
-                confidence=0.0,
-                proposed_dvrs_tx_range=None,
-                proposed_dvrs_rx_range=proposed_rx,
-                mount_compatibility=variant_plan.mount_compatibility,
-                failure_reasons=[violation.message],
-                rule_violations=[violation],
-                warnings=warnings,
-                notes=notes,
+            return self._attach_system_ranges(
+                PlanResult(
+                    plan_id=plan.id,
+                    display_name=plan.display_name,
+                    technical_status=TechnicalStatus.INVALID,
+                    regulatory_status=RegulatoryStatus.NOT_EVALUATED,
+                    confidence=0.0,
+                    proposed_dvrs_tx_range=None,
+                    proposed_dvrs_rx_range=proposed_rx,
+                    mount_compatibility=variant_plan.mount_compatibility,
+                    failure_reasons=[violation.message],
+                    rule_violations=[violation],
+                    warnings=warnings,
+                    notes=notes,
+                ),
+                system_summary,
             )
 
         proposed_tx, proposed_rx = self._apply_actual_dvrs_frequencies(
@@ -586,19 +606,22 @@ class DVRSCalculationEngine:
             derived_pair_offset,
         )
         if actual_setup_violation is not None:
-            return PlanResult(
-                plan_id=plan.id,
-                display_name=plan.display_name,
-                technical_status=TechnicalStatus.INVALID,
-                regulatory_status=RegulatoryStatus.NOT_EVALUATED,
-                confidence=0.0,
-                proposed_dvrs_tx_range=proposed_tx,
-                proposed_dvrs_rx_range=proposed_rx,
-                mount_compatibility=variant_plan.mount_compatibility,
-                failure_reasons=[actual_setup_violation.message],
-                rule_violations=[actual_setup_violation],
-                warnings=warnings,
-                notes=notes,
+            return self._attach_system_ranges(
+                PlanResult(
+                    plan_id=plan.id,
+                    display_name=plan.display_name,
+                    technical_status=TechnicalStatus.INVALID,
+                    regulatory_status=RegulatoryStatus.NOT_EVALUATED,
+                    confidence=0.0,
+                    proposed_dvrs_tx_range=proposed_tx,
+                    proposed_dvrs_rx_range=proposed_rx,
+                    mount_compatibility=variant_plan.mount_compatibility,
+                    failure_reasons=[actual_setup_violation.message],
+                    rule_violations=[actual_setup_violation],
+                    warnings=warnings,
+                    notes=notes,
+                ),
+                system_summary,
             )
 
         actual_spacing_note = self._build_actual_frequency_spacing_note(
@@ -616,19 +639,22 @@ class DVRSCalculationEngine:
 
         mobile_rx_spacing_violation = self._validate_mobile_rx_spacing(system_summary, variant_plan, proposed_tx)
         if mobile_rx_spacing_violation is not None:
-            return PlanResult(
-                plan_id=plan.id,
-                display_name=plan.display_name,
-                technical_status=TechnicalStatus.INVALID,
-                regulatory_status=RegulatoryStatus.NOT_EVALUATED,
-                confidence=0.0,
-                proposed_dvrs_tx_range=proposed_tx,
-                proposed_dvrs_rx_range=proposed_rx,
-                mount_compatibility=variant_plan.mount_compatibility,
-                failure_reasons=[mobile_rx_spacing_violation.message],
-                rule_violations=[mobile_rx_spacing_violation],
-                warnings=warnings,
-                notes=notes,
+            return self._attach_system_ranges(
+                PlanResult(
+                    plan_id=plan.id,
+                    display_name=plan.display_name,
+                    technical_status=TechnicalStatus.INVALID,
+                    regulatory_status=RegulatoryStatus.NOT_EVALUATED,
+                    confidence=0.0,
+                    proposed_dvrs_tx_range=proposed_tx,
+                    proposed_dvrs_rx_range=proposed_rx,
+                    mount_compatibility=variant_plan.mount_compatibility,
+                    failure_reasons=[mobile_rx_spacing_violation.message],
+                    rule_violations=[mobile_rx_spacing_violation],
+                    warnings=warnings,
+                    notes=notes,
+                ),
+                system_summary,
             )
 
         if not self._range_within_window(proposed_tx, variant_plan.dvrs_tx_window):
@@ -648,19 +674,22 @@ class DVRSCalculationEngine:
                     "allowed_dvrs_tx_window": self._window_details(variant_plan.dvrs_tx_window),
                 },
             )
-            return PlanResult(
-                plan_id=plan.id,
-                display_name=plan.display_name,
-                technical_status=TechnicalStatus.INVALID,
-                regulatory_status=RegulatoryStatus.NOT_EVALUATED,
-                confidence=0.0,
-                proposed_dvrs_tx_range=proposed_tx,
-                proposed_dvrs_rx_range=proposed_rx,
-                mount_compatibility=variant_plan.mount_compatibility,
-                failure_reasons=[violation.message],
-                rule_violations=[violation],
-                warnings=warnings,
-                notes=notes,
+            return self._attach_system_ranges(
+                PlanResult(
+                    plan_id=plan.id,
+                    display_name=plan.display_name,
+                    technical_status=TechnicalStatus.INVALID,
+                    regulatory_status=RegulatoryStatus.NOT_EVALUATED,
+                    confidence=0.0,
+                    proposed_dvrs_tx_range=proposed_tx,
+                    proposed_dvrs_rx_range=proposed_rx,
+                    mount_compatibility=variant_plan.mount_compatibility,
+                    failure_reasons=[violation.message],
+                    rule_violations=[violation],
+                    warnings=warnings,
+                    notes=notes,
+                ),
+                system_summary,
             )
 
         regulatory_status, confidence, regulatory_reasons = classify_regulatory_status(
@@ -670,22 +699,55 @@ class DVRSCalculationEngine:
             (proposed_rx.low_mhz, proposed_rx.high_mhz),
         )
 
-        return PlanResult(
-            plan_id=plan.id,
-            display_name=plan.display_name,
-            technical_status=TechnicalStatus.VALID,
-            regulatory_status=regulatory_status,
-            confidence=confidence,
-            proposed_dvrs_tx_range=proposed_tx,
-            proposed_dvrs_rx_range=proposed_rx,
-            mount_compatibility=variant_plan.mount_compatibility,
-            rule_violations=[],
-            warnings=warnings,
-            regulatory_reasons=regulatory_reasons,
-            notes=notes,
+        return self._attach_system_ranges(
+            PlanResult(
+                plan_id=plan.id,
+                display_name=plan.display_name,
+                technical_status=TechnicalStatus.VALID,
+                regulatory_status=regulatory_status,
+                confidence=confidence,
+                proposed_dvrs_tx_range=proposed_tx,
+                proposed_dvrs_rx_range=proposed_rx,
+                mount_compatibility=variant_plan.mount_compatibility,
+                rule_violations=[],
+                warnings=warnings,
+                regulatory_reasons=regulatory_reasons,
+                notes=notes,
+            ),
+            system_summary,
         )
 
     def _plan_variants(self, plan: TechnicalPlan) -> list[tuple[str, TechnicalPlan]]:
+        if plan.id == "700-B":
+            return [
+                ("700-system-only", plan),
+                ("800-system-only", self._build_analog_800_variant(plan, "800-C")),
+                ("700-and-800-system", plan),
+            ]
+        if plan.id == "700-C":
+            return [
+                ("700-system-only", plan),
+                ("800-system-only", self._build_analog_800_variant(plan, "800-B")),
+                ("700-and-800-system", plan),
+            ]
+        if plan.id == "800-A1":
+            return [
+                ("700-system-only", self._build_analog_700_variant(plan, "700-B")),
+                ("800-system-only", plan),
+                ("700-and-800-system", plan),
+            ]
+        if plan.id == "800-A2":
+            return [
+                ("700-system-only", self._build_analog_700_variant(plan, "700-B")),
+                ("800-system-only", plan),
+                ("700-and-800-system", plan),
+            ]
+        if plan.id == "800-B":
+            return [
+                ("700-system-only", self._build_analog_700_variant(plan, "700-C")),
+                ("800-system-only", plan),
+                ("700-and-800-system", plan),
+            ]
         return [("native", plan)]
 
     def _candidate_plans(
@@ -716,7 +778,7 @@ class DVRSCalculationEngine:
         if system_band == BandFamily.BAND_800:
             return self._plans_for_system_band_hint(SystemBandHint.BAND_800_ONLY) or []
 
-        return list(TECHNICAL_PLANS[system_band])
+        return self._plans_for_detected_band(system_band)
 
     def _plans_for_system_band_hint(
         self,
@@ -726,12 +788,21 @@ class DVRSCalculationEngine:
             return None
 
         if system_band_hint == SystemBandHint.BAND_800_ONLY:
-            eight_hundred_only_plan_ids = {"700-A", "800-C"}
+            eight_hundred_only_plan_ids = {"700-A", "700-B", "700-C", "800-A1", "800-A2", "800-B", "800-C"}
             return [
                 plan
                 for family in (BandFamily.BAND_700, BandFamily.BAND_800)
                 for plan in TECHNICAL_PLANS[family]
                 if plan.id in eight_hundred_only_plan_ids
+            ]
+
+        if system_band_hint == SystemBandHint.BAND_700_ONLY:
+            seven_hundred_only_plan_ids = {"700-B", "700-C", "800-A1", "800-A2", "800-B"}
+            return [
+                plan
+                for family in (BandFamily.BAND_700, BandFamily.BAND_800)
+                for plan in TECHNICAL_PLANS[family]
+                if plan.id in seven_hundred_only_plan_ids
             ]
 
         if system_band_hint == SystemBandHint.BAND_700_AND_800:
@@ -745,7 +816,32 @@ class DVRSCalculationEngine:
 
         return None
 
+    def _plans_for_detected_band(
+        self,
+        system_band: BandFamily,
+    ) -> list[TechnicalPlan]:
+        if system_band == BandFamily.BAND_700:
+            seven_hundred_only_plan_ids = {"700-A", "700-B", "700-C", "800-A1", "800-A2", "800-B"}
+            return [
+                plan
+                for family in (BandFamily.BAND_700, BandFamily.BAND_800)
+                for plan in TECHNICAL_PLANS[family]
+                if plan.id in seven_hundred_only_plan_ids
+            ]
+        return list(TECHNICAL_PLANS[system_band])
+
     def _native_plan_matches_actual_dvrs(
+        self,
+        plan: TechnicalPlan,
+        request: CalculationRequest,
+    ) -> bool:
+        return any(
+            self._variant_request_model_matches(request, plan, variant_label)
+            and self._single_plan_matches_actual_dvrs(variant_plan, request)
+            for variant_label, variant_plan in self._plan_variants(plan)
+        )
+
+    def _single_plan_matches_actual_dvrs(
         self,
         plan: TechnicalPlan,
         request: CalculationRequest,
@@ -779,6 +875,68 @@ class DVRSCalculationEngine:
         else:
             delta = self._round_freq(actual_tx.low_mhz - actual_rx.low_mhz)
         return delta == plan.pair_offset_mhz
+
+    def _build_analog_800_variant(self, plan: TechnicalPlan, analog_plan_id: str) -> TechnicalPlan:
+        analog_plan = next(
+            candidate
+            for candidate in TECHNICAL_PLANS[BandFamily.BAND_800]
+            if candidate.id == analog_plan_id
+        )
+        return replace(
+            plan,
+            band_family=analog_plan.band_family,
+            dvrs_mode=analog_plan.dvrs_mode,
+            placement=analog_plan.placement,
+            mount_compatibility=list(analog_plan.mount_compatibility),
+            dvrs_rx_window=analog_plan.dvrs_rx_window,
+            dvrs_tx_window=analog_plan.dvrs_tx_window,
+            pair_offset_mhz=analog_plan.pair_offset_mhz,
+            pair_direction=analog_plan.pair_direction,
+            min_separation_from_mobile_tx_mhz=analog_plan.min_separation_from_mobile_tx_mhz,
+            max_dvrs_passband_mhz=analog_plan.max_dvrs_passband_mhz,
+            min_separation_from_mobile_rx_mhz=analog_plan.min_separation_from_mobile_rx_mhz,
+            active_mobile_tx_window=analog_plan.active_mobile_tx_window,
+            active_mobile_rx_window=analog_plan.active_mobile_rx_window,
+            fixed_dvrs_tx_range=analog_plan.fixed_dvrs_tx_range,
+            fixed_dvrs_rx_range=analog_plan.fixed_dvrs_rx_range,
+            requires_mobile_rx_range=analog_plan.requires_mobile_rx_range,
+            rule_precision=analog_plan.rule_precision,
+            notes=list(plan.notes)
+            + [
+                "Evaluated using the 800 MHz-only system model."
+            ],
+        )
+
+    def _build_analog_700_variant(self, plan: TechnicalPlan, analog_plan_id: str) -> TechnicalPlan:
+        analog_plan = next(
+            candidate
+            for candidate in TECHNICAL_PLANS[BandFamily.BAND_700]
+            if candidate.id == analog_plan_id
+        )
+        return replace(
+            plan,
+            band_family=analog_plan.band_family,
+            dvrs_mode=analog_plan.dvrs_mode,
+            placement=analog_plan.placement,
+            mount_compatibility=list(analog_plan.mount_compatibility),
+            dvrs_rx_window=analog_plan.dvrs_rx_window,
+            dvrs_tx_window=analog_plan.dvrs_tx_window,
+            pair_offset_mhz=analog_plan.pair_offset_mhz,
+            pair_direction=analog_plan.pair_direction,
+            min_separation_from_mobile_tx_mhz=analog_plan.min_separation_from_mobile_tx_mhz,
+            max_dvrs_passband_mhz=analog_plan.max_dvrs_passband_mhz,
+            min_separation_from_mobile_rx_mhz=analog_plan.min_separation_from_mobile_rx_mhz,
+            active_mobile_tx_window=analog_plan.active_mobile_tx_window,
+            active_mobile_rx_window=analog_plan.active_mobile_rx_window,
+            fixed_dvrs_tx_range=analog_plan.fixed_dvrs_tx_range,
+            fixed_dvrs_rx_range=analog_plan.fixed_dvrs_rx_range,
+            requires_mobile_rx_range=analog_plan.requires_mobile_rx_range,
+            rule_precision=analog_plan.rule_precision,
+            notes=list(plan.notes)
+            + [
+                "Evaluated using the 700 MHz-only system model."
+            ],
+        )
 
     def _build_interop_variant(self, plan: TechnicalPlan) -> TechnicalPlan | None:
         if plan.band_family == BandFamily.BAND_700:
@@ -825,8 +983,9 @@ class DVRSCalculationEngine:
     ) -> PlanResult:
         matching_actual_results = [
             result
-            for result, (_, variant_plan) in zip(candidate_results, self._plan_variants(plan))
-            if self._variant_matches_actual_licensed(request, variant_plan)
+            for result, (variant_label, variant_plan) in zip(candidate_results, self._plan_variants(plan))
+            if self._variant_request_model_matches(request, plan, variant_label)
+            and self._variant_matches_actual_licensed(request, variant_plan)
         ]
         valid_matching = [
             result for result in matching_actual_results if result.technical_status == TechnicalStatus.VALID
@@ -842,6 +1001,13 @@ class DVRSCalculationEngine:
 
         if matching_actual_results:
             return matching_actual_results[0]
+        non_mismatch_results = [
+            result
+            for result in candidate_results
+            if not any(violation.code == "SYSTEM_MODEL_MISMATCH" for violation in result.rule_violations)
+        ]
+        if non_mismatch_results:
+            return non_mismatch_results[0]
         return candidate_results[0]
 
     def _variant_matches_actual_licensed(
@@ -855,6 +1021,79 @@ class DVRSCalculationEngine:
         tx_matches = actual_tx is None or self._range_within_window(actual_tx, plan.dvrs_tx_window)
         rx_matches = actual_rx is None or self._range_within_window(actual_rx, plan.dvrs_rx_window)
         return tx_matches and rx_matches
+
+    def _build_variant_system_summary(
+        self,
+        request: CalculationRequest,
+        default_summary: SystemSummary,
+        base_plan: TechnicalPlan,
+        variant_label: str,
+        variant_plan: TechnicalPlan,
+    ) -> SystemSummary | None:
+        if variant_label == "native":
+            return default_summary
+
+        if base_plan.id not in {"700-B", "700-C", "800-A1", "800-A2", "800-B"}:
+            return default_summary
+
+        if not self._variant_request_model_matches(request, base_plan, variant_label):
+            return None
+
+        if variant_label == "700-system-only":
+            return self._build_system_summary(request, BandFamily.BAND_700)
+
+        if variant_label == "800-system-only":
+            return self._build_system_summary(request, BandFamily.BAND_800)
+
+        if variant_label == "700-and-800-system":
+            return self._build_plan_system_summary(request, BandFamily.BAND_700_800, variant_plan)
+
+        return default_summary
+
+    def _variant_request_model_matches(
+        self,
+        request: CalculationRequest,
+        base_plan: TechnicalPlan,
+        variant_label: str,
+    ) -> bool:
+        if base_plan.id not in {"700-B", "700-C", "800-A1", "800-A2", "800-B"}:
+            return True
+
+        if variant_label == "700-and-800-system":
+            return request.system_band_hint == SystemBandHint.BAND_700_AND_800
+
+        if request.system_band_hint == SystemBandHint.BAND_700_AND_800:
+            return False
+
+        if request.mobile_tx_low_mhz is None or request.mobile_tx_high_mhz is None:
+            return False
+
+        detected_band = self._detect_band(request.mobile_tx_low_mhz, request.mobile_tx_high_mhz)
+        if variant_label == "700-system-only":
+            return detected_band == BandFamily.BAND_700
+        if variant_label == "800-system-only":
+            return detected_band == BandFamily.BAND_800
+        return True
+
+    def _build_system_model_mismatch_message(self, variant_label: str) -> str:
+        if variant_label == "700-system-only":
+            return "This submodel only applies when the system frequencies are 700 MHz only."
+        if variant_label == "800-system-only":
+            return "This submodel only applies when the system frequencies are 800 MHz only."
+        if variant_label == "700-and-800-system":
+            return "This submodel only applies when both 700 MHz and 800 MHz system frequencies are provided."
+        return "This submodel does not match the provided system frequency model."
+
+    def _attach_system_ranges(
+        self,
+        result: PlanResult,
+        system_summary: SystemSummary,
+    ) -> PlanResult:
+        result.mobile_tx_range = system_summary.mobile_tx_range
+        result.mobile_rx_range = system_summary.mobile_rx_range
+        result.system_tx_range = system_summary.system_tx_range
+        result.system_rx_range = system_summary.system_rx_range
+        return result
 
     def _validate_active_mobile_windows(
         self,

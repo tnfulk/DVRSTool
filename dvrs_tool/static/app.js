@@ -9,6 +9,7 @@ const resultsLayout = document.querySelector("#results-layout");
 const apiBaseUrl = window.location.protocol === "file:" ? "http://127.0.0.1:8000" : "";
 let latestPayload = null;
 let latestInputPrecision = null;
+let lastSystemBandMode = null;
 
 function numberOrNull(formData, key) {
   const value = formData.get(key);
@@ -126,11 +127,11 @@ function renderError(message) {
 function formatFieldLabel(field) {
   const labels = {
     country: "Country",
-    mobile_tx_low_mhz: "Mobile TX Low",
-    mobile_tx_high_mhz: "Mobile TX High",
-    system_band_hint: "System Bands",
-    mobile_rx_low_mhz: "Mobile RX Low",
-    mobile_rx_high_mhz: "Mobile RX High",
+    mobile_tx_low_mhz: "System Frequency Low",
+    mobile_tx_high_mhz: "System Frequency High",
+    system_band_hint: "System Frequency Configuration",
+    mobile_rx_low_mhz: "System TX Low",
+    mobile_rx_high_mhz: "System TX High",
     actual_dvrs_tx_mhz: "DVRS TX",
     actual_dvrs_rx_mhz: "DVRS RX",
   };
@@ -202,9 +203,9 @@ function hideResults() {
 
 function resetRenderedResults() {
   systemSummary.className = "empty-state";
-  systemSummary.innerHTML = "Run an evaluation to see the detected band, system pairing, and assumptions.";
+  systemSummary.innerHTML = "Run an evaluation to see the selected system configuration, detected band, and derived system pairing.";
   planResults.className = "empty-state";
-  planResults.innerHTML = "All standard plans for the detected band will appear here.";
+  planResults.innerHTML = "The standard plans for the selected system configuration will appear here.";
   orderingSummary.className = "empty-state";
   orderingSummary.innerHTML = "The best preliminary standard plan will populate this summary.";
 }
@@ -273,15 +274,15 @@ function buildVisualizationSegments(plan, summary) {
     && (summary.mobile_tx_700_range || summary.mobile_tx_800_range);
   const segments = hasMixedSegments
     ? [
-      { label: "700 Mobile TX", range: summary.mobile_tx_700_range, className: "mobile-700" },
-      { label: "800 Mobile TX", range: summary.mobile_tx_800_range, className: "mobile-800" },
+      { label: "700 System RX", range: summary.mobile_tx_700_range, className: "mobile-700" },
+      { label: "800 System RX", range: summary.mobile_tx_800_range, className: "mobile-800" },
       { label: "700 System TX", range: summary.system_tx_700_range, className: "system-700" },
       { label: "800 System TX", range: summary.system_tx_800_range, className: "system-800" },
       { label: "DVRS RX", range: plan.proposed_dvrs_rx_range, className: "dvrs-rx" },
       { label: "DVRS TX", range: plan.proposed_dvrs_tx_range, className: "dvrs-tx" },
     ]
     : [
-      { label: "Mobile TX", range: plan.mobile_tx_range, className: "mobile" },
+      { label: "System RX", range: plan.mobile_tx_range, className: "mobile" },
       { label: "System TX", range: plan.system_tx_range, className: "system" },
       { label: "DVRS RX", range: plan.proposed_dvrs_rx_range, className: "dvrs-rx" },
       { label: "DVRS TX", range: plan.proposed_dvrs_tx_range, className: "dvrs-tx" },
@@ -419,15 +420,13 @@ function renderSystemSummary(summary) {
   const mobileRxPrecision = latestInputPrecision?.mobile_rx_range || mobileTxPrecision;
   const isMixedBand = summary.detected_band === "700 and 800";
   const baseMetrics = isMixedBand ? "" : `
-      <div class="metric"><span>Mobile TX</span><strong>${escapeHtml(formatRange(summary.mobile_tx_range, mobileTxPrecision))}</strong></div>
-      <div class="metric"><span>Mobile RX</span><strong>${escapeHtml(formatRange(summary.mobile_rx_range, mobileRxPrecision))}</strong></div>
-      <div class="metric"><span>System RX</span><strong>${escapeHtml(formatRange(summary.system_rx_range, mobileTxPrecision))}</strong></div>
+      <div class="metric"><span>Entered System Frequencies</span><strong>${escapeHtml(formatRange(summary.system_rx_range, mobileTxPrecision))}</strong></div>
       <div class="metric"><span>System TX</span><strong>${escapeHtml(formatRange(summary.system_tx_range, mobileRxPrecision))}</strong></div>
   `;
   const mixedSystemMetrics = summary.detected_band === "700 and 800" ? `
-      <div class="metric"><span>700 Mobile TX</span><strong>${escapeHtml(formatRange(summary.mobile_tx_700_range, mobile700Precision))}</strong></div>
+      <div class="metric"><span>700 System RX</span><strong>${escapeHtml(formatRange(summary.mobile_tx_700_range, mobile700Precision))}</strong></div>
       <div class="metric"><span>700 System TX</span><strong>${escapeHtml(formatRange(summary.system_tx_700_range, mobile700Precision))}</strong></div>
-      <div class="metric"><span>800 Mobile TX</span><strong>${escapeHtml(formatRange(summary.mobile_tx_800_range, mobile800Precision))}</strong></div>
+      <div class="metric"><span>800 System RX</span><strong>${escapeHtml(formatRange(summary.mobile_tx_800_range, mobile800Precision))}</strong></div>
       <div class="metric"><span>800 System TX</span><strong>${escapeHtml(formatRange(summary.system_tx_800_range, mobile800Precision))}</strong></div>
   ` : "";
   systemSummary.className = "summary";
@@ -623,6 +622,8 @@ resetPlannerButton?.addEventListener("click", resetPlanner);
 function syncSystemBandFields() {
   const systemBandSelect = form.querySelector('select[name="system_band_hint"]');
   const mixedBandFields = form.querySelectorAll(".mixed-band-field");
+  const singleBandLowLabel = form.querySelector("[data-single-band-low-label]");
+  const singleBandHighLabel = form.querySelector("[data-single-band-high-label]");
   const baseMobileFields = [
     form.querySelector('input[name="mobile_tx_low_mhz"]').closest("label"),
     form.querySelector('input[name="mobile_tx_high_mhz"]').closest("label"),
@@ -631,7 +632,17 @@ function syncSystemBandFields() {
     form.querySelector('input[name="mobile_tx_low_mhz"]'),
     form.querySelector('input[name="mobile_tx_high_mhz"]'),
   ];
-  const mixedMode = systemBandSelect?.value === "700 and 800";
+  const selectedMode = systemBandSelect?.value || "800 only";
+  const mixedMode = selectedMode === "700 and 800";
+  const singleBandPrefix = selectedMode === "700 only" ? "700 MHz System Frequency" : "800 MHz System Frequency";
+  const modeChanged = lastSystemBandMode !== null && lastSystemBandMode !== selectedMode;
+
+  if (singleBandLowLabel) {
+    singleBandLowLabel.textContent = `${singleBandPrefix} Low (MHz)`;
+  }
+  if (singleBandHighLabel) {
+    singleBandHighLabel.textContent = `${singleBandPrefix} High (MHz)`;
+  }
 
   mixedBandFields.forEach((field) => {
     field.hidden = !mixedMode;
@@ -640,6 +651,9 @@ function syncSystemBandFields() {
     if (input) {
       input.required = mixedMode;
       input.disabled = !mixedMode;
+      if (!mixedMode && modeChanged) {
+        input.value = "";
+      }
     }
   });
 
@@ -653,8 +667,13 @@ function syncSystemBandFields() {
     if (input) {
       input.required = !mixedMode;
       input.disabled = mixedMode;
+      if (mixedMode || modeChanged) {
+        input.value = "";
+      }
     }
   });
+
+  lastSystemBandMode = selectedMode;
 }
 
 form.querySelector('select[name="system_band_hint"]')?.addEventListener("change", syncSystemBandFields);

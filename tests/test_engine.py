@@ -27,18 +27,20 @@ class DVRSCalculationEngineTests(unittest.TestCase):
     def setUp(self) -> None:
         self.engine = DVRSCalculationEngine()
 
-    def test_700_only_system_is_not_a_supported_standard_configuration_model(self) -> None:
-        request = CalculationRequest(
-            country=Country.UNITED_STATES,
-            mobile_tx_low_mhz=803.0,
-            mobile_tx_high_mhz=804.0,
+    def test_700_only_system_is_detected_as_700_band(self) -> None:
+        response = self.engine.evaluate(
+            CalculationRequest(
+                country=Country.UNITED_STATES,
+                mobile_tx_low_mhz=803.0,
+                mobile_tx_high_mhz=804.0,
+            )
         )
 
-        with self.assertRaises(UnsupportedBandError) as ctx:
-            self.engine.evaluate(request)
-
-        self.assertEqual(ctx.exception.code, "UNSUPPORTED_700_ONLY_SYSTEM")
-        self.assertEqual(ctx.exception.details["supported_models"], ["800 only", "700 and 800"])
+        self.assertEqual(response.system_summary.detected_band, BandFamily.BAND_700)
+        self.assertEqual(
+            [plan.plan_id for plan in response.plan_results],
+            ["700-A", "700-B", "700-C", "800-A1", "800-A2", "800-B"],
+        )
 
     def test_800_band_plan_c_is_valid_when_at_least_one_channel_in_fixed_range_works(self) -> None:
         request = CalculationRequest(
@@ -199,7 +201,10 @@ class DVRSCalculationEngineTests(unittest.TestCase):
             )
         )
 
-        self.assertEqual([plan.plan_id for plan in response.plan_results], ["700-A", "800-C"])
+        self.assertEqual(
+            [plan.plan_id for plan in response.plan_results],
+            ["700-A", "700-B", "700-C", "800-A1", "800-A2", "800-B", "800-C"],
+        )
 
     def test_800_c_is_valid_when_fixed_range_contains_a_spacing_compliant_channel(self) -> None:
         request = CalculationRequest(
@@ -228,7 +233,10 @@ class DVRSCalculationEngineTests(unittest.TestCase):
         )
 
         self.assertEqual(response.system_summary.detected_band, BandFamily.BAND_800)
-        self.assertEqual([plan.plan_id for plan in response.plan_results], ["700-A", "800-C"])
+        self.assertEqual(
+            [plan.plan_id for plan in response.plan_results],
+            ["700-A", "700-B", "700-C", "800-A1", "800-A2", "800-B", "800-C"],
+        )
 
     def test_engine_rejects_more_than_five_decimal_places_with_exact_reason(self) -> None:
         request = CalculationRequest(
@@ -285,7 +293,7 @@ class DVRSCalculationEngineTests(unittest.TestCase):
         valid_plan_ids = [
             plan.plan_id for plan in response.plan_results if plan.technical_status == TechnicalStatus.VALID
         ]
-        self.assertEqual(valid_plan_ids, ["800-B"])
+        self.assertEqual(valid_plan_ids, ["700-C", "800-B"])
 
     def test_actual_dvrs_window_mismatch_does_not_override_spacing_and_plan_rules(self) -> None:
         response = self.engine.evaluate(
@@ -298,7 +306,7 @@ class DVRSCalculationEngineTests(unittest.TestCase):
             )
         )
 
-        self.assertEqual([plan.plan_id for plan in response.plan_results], ["800-A2", "800-B", "800-C"])
+        self.assertEqual([plan.plan_id for plan in response.plan_results], ["700-B", "700-C", "800-A2", "800-B", "800-C"])
 
         plan_a2 = next(plan for plan in response.plan_results if plan.plan_id == "800-A2")
         self.assertEqual(plan_a2.technical_status, TechnicalStatus.INVALID)
@@ -336,6 +344,21 @@ class DVRSCalculationEngineTests(unittest.TestCase):
                 mobile_tx_700_high_mhz=803.0,
                 mobile_tx_800_low_mhz=806.0,
                 mobile_tx_800_high_mhz=807.0,
+            )
+        )
+
+        self.assertEqual(
+            [plan.plan_id for plan in response.plan_results],
+            ["700-B", "700-C", "800-A1", "800-A2", "800-B"],
+        )
+
+    def test_system_band_hint_700_only_limits_default_candidates(self) -> None:
+        response = self.engine.evaluate(
+            CalculationRequest(
+                country=Country.UNITED_STATES,
+                mobile_tx_low_mhz=802.0,
+                mobile_tx_high_mhz=803.0,
+                system_band_hint=SystemBandHint.BAND_700_ONLY,
             )
         )
 
@@ -394,7 +417,10 @@ class DVRSCalculationEngineTests(unittest.TestCase):
         )
 
         self.assertNotIn("800-C", [plan.plan_id for plan in mixed_response.plan_results])
-        self.assertEqual([plan.plan_id for plan in only_800_response.plan_results], ["700-A", "800-C"])
+        self.assertEqual(
+            [plan.plan_id for plan in only_800_response.plan_results],
+            ["700-A", "700-B", "700-C", "800-A1", "800-A2", "800-B", "800-C"],
+        )
 
     def test_actual_dvrs_native_plan_driver_overrides_system_band_hint(self) -> None:
         response = self.engine.evaluate(
@@ -529,6 +555,121 @@ class DVRSCalculationEngineTests(unittest.TestCase):
         self.assertEqual(plan_c.proposed_dvrs_tx_range.low_mhz, 774.8875)
         self.assertEqual(plan_c.proposed_dvrs_tx_range.high_mhz, 775.0)
         self.assertEqual(plan_c.rule_violations, [])
+
+    def test_700_b_parent_passes_for_700_only_system(self) -> None:
+        response = self.engine.evaluate(
+            CalculationRequest(
+                country=Country.UNITED_STATES,
+                mobile_tx_low_mhz=802.0,
+                mobile_tx_high_mhz=803.0,
+            )
+        )
+
+        plan_b = next(plan for plan in response.plan_results if plan.plan_id == "700-B")
+
+        self.assertEqual(plan_b.technical_status, TechnicalStatus.VALID)
+        self.assertEqual(plan_b.proposed_dvrs_rx_range.low_mhz, 799.0)
+        self.assertEqual(plan_b.proposed_dvrs_rx_range.high_mhz, 799.0)
+        self.assertEqual(plan_b.proposed_dvrs_tx_range.low_mhz, 769.0)
+        self.assertEqual(plan_b.proposed_dvrs_tx_range.high_mhz, 769.0)
+
+    def test_700_b_parent_passes_for_800_only_system_via_internal_submodel(self) -> None:
+        response = self.engine.evaluate(
+            CalculationRequest(
+                country=Country.UNITED_STATES,
+                mobile_tx_low_mhz=811.0,
+                mobile_tx_high_mhz=812.0,
+                system_band_hint=SystemBandHint.BAND_800_ONLY,
+            )
+        )
+
+        plan_b = next(plan for plan in response.plan_results if plan.plan_id == "700-B")
+
+        self.assertEqual(plan_b.technical_status, TechnicalStatus.VALID)
+        self.assertEqual(plan_b.proposed_dvrs_rx_range.low_mhz, 806.0)
+        self.assertEqual(plan_b.proposed_dvrs_rx_range.high_mhz, 808.0)
+        self.assertEqual(plan_b.proposed_dvrs_tx_range.low_mhz, 851.0)
+        self.assertEqual(plan_b.proposed_dvrs_tx_range.high_mhz, 853.0)
+        self.assertEqual(plan_b.system_tx_range.low_mhz, 856.0)
+        self.assertEqual(plan_b.system_tx_range.high_mhz, 857.0)
+
+    def test_700_c_parent_passes_for_800_only_system_via_internal_submodel(self) -> None:
+        response = self.engine.evaluate(
+            CalculationRequest(
+                country=Country.UNITED_STATES,
+                mobile_tx_low_mhz=809.0,
+                mobile_tx_high_mhz=810.0,
+                system_band_hint=SystemBandHint.BAND_800_ONLY,
+            )
+        )
+
+        plan_c = next(plan for plan in response.plan_results if plan.plan_id == "700-C")
+
+        self.assertEqual(plan_c.technical_status, TechnicalStatus.VALID)
+        self.assertEqual(plan_c.proposed_dvrs_rx_range.low_mhz, 813.0)
+        self.assertEqual(plan_c.proposed_dvrs_rx_range.high_mhz, 824.0)
+        self.assertEqual(plan_c.proposed_dvrs_tx_range.low_mhz, 858.0)
+        self.assertEqual(plan_c.proposed_dvrs_tx_range.high_mhz, 869.0)
+
+    def test_800_a1_parent_passes_for_700_only_system_via_internal_submodel(self) -> None:
+        response = self.engine.evaluate(
+            CalculationRequest(
+                country=Country.UNITED_STATES,
+                mobile_tx_low_mhz=803.0,
+                mobile_tx_high_mhz=804.0,
+            )
+        )
+
+        plan_a1 = next(plan for plan in response.plan_results if plan.plan_id == "800-A1")
+
+        self.assertEqual(plan_a1.technical_status, TechnicalStatus.VALID)
+        self.assertEqual(plan_a1.system_tx_range.low_mhz, 773.0)
+        self.assertEqual(plan_a1.system_tx_range.high_mhz, 774.0)
+
+    def test_800_a2_parent_passes_for_700_only_system_via_internal_submodel(self) -> None:
+        response = self.engine.evaluate(
+            CalculationRequest(
+                country=Country.UNITED_STATES,
+                mobile_tx_low_mhz=802.0,
+                mobile_tx_high_mhz=803.0,
+            )
+        )
+
+        plan_a2 = next(plan for plan in response.plan_results if plan.plan_id == "800-A2")
+
+        self.assertEqual(plan_a2.technical_status, TechnicalStatus.VALID)
+        self.assertEqual(plan_a2.system_tx_range.low_mhz, 772.0)
+        self.assertEqual(plan_a2.system_tx_range.high_mhz, 773.0)
+
+    def test_800_b_parent_passes_for_700_only_system_via_internal_submodel(self) -> None:
+        response = self.engine.evaluate(
+            CalculationRequest(
+                country=Country.UNITED_STATES,
+                mobile_tx_low_mhz=799.5,
+                mobile_tx_high_mhz=800.5,
+            )
+        )
+
+        plan_b = next(plan for plan in response.plan_results if plan.plan_id == "800-B")
+
+        self.assertEqual(plan_b.technical_status, TechnicalStatus.VALID)
+        self.assertEqual(plan_b.system_tx_range.low_mhz, 769.5)
+        self.assertEqual(plan_b.system_tx_range.high_mhz, 770.5)
+
+    def test_800_only_hint_includes_800_a1_a2_and_b_parents(self) -> None:
+        response = self.engine.evaluate(
+            CalculationRequest(
+                country=Country.UNITED_STATES,
+                mobile_tx_low_mhz=811.0,
+                mobile_tx_high_mhz=812.0,
+                system_band_hint=SystemBandHint.BAND_800_ONLY,
+            )
+        )
+
+        self.assertEqual(
+            [plan.plan_id for plan in response.plan_results],
+            ["700-A", "700-B", "700-C", "800-A1", "800-A2", "800-B", "800-C"],
+        )
 
     def test_active_mobile_windows_limit_plan_validity(self) -> None:
         request = CalculationRequest(

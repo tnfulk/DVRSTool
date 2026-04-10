@@ -25,6 +25,7 @@ class PairingSource(str, Enum):
 
 
 class SystemBandHint(str, Enum):
+    BAND_700_ONLY = "700 only"
     BAND_800_ONLY = "800 only"
     BAND_700_AND_800 = "700 and 800"
 

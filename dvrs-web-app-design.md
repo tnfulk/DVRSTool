@@ -44,8 +44,9 @@ In scope:
 
 - Futurecom DVR-LX standard 700 MHz and 800 MHz in-band configurations
 - country toggle for `United States` and `Canada`
-- user input of low/high mobile transmit frequencies
-- inferred 700 MHz / 800 MHz band detection where possible
+- user input of the system frequency ranges actually available to the customer
+- explicit system-frequency configuration selection: `700 only`, `800 only`, or `700 and 800`
+- inferred 700 MHz / 800 MHz system-band detection where possible for single-band entries
 - mixed 700 MHz and 800 MHz system evaluation
 - computed system TX/RX summary
 - proposed DVRS TX/RX ranges for each standard plan
@@ -89,14 +90,31 @@ The app must encode the following Futurecom guidance:
 Required inputs:
 
 - `Country`: `United States` or `Canada`
-- `Lowest mobile transmit frequency (MHz)`
-- `Highest mobile transmit frequency (MHz)`
+- `System frequency configuration`
+  - `700 only`
+  - `800 only`
+  - `700 and 800`
+- For `700 only`
+  - `700 MHz system frequency low (MHz)`
+  - `700 MHz system frequency high (MHz)`
+- For `800 only`
+  - `800 MHz system frequency low (MHz)`
+  - `800 MHz system frequency high (MHz)`
+- For `700 and 800`
+  - `700 MHz system frequency low/high (MHz)`
+  - `800 MHz system frequency low/high (MHz)`
 
 Derived inputs:
 
-- detected band family
-- detected mobile TX passband
-- candidate mobile RX range, where the offset is deterministic for 700 MHz and 800 MHz plans
+- detected system-band family
+- detected entered system passband
+- paired system TX range, where the offset is deterministic for 700 MHz and 800 MHz system models
+
+Terminology rule:
+
+- The system frequency inputs describe the frequencies already present in the customer system.
+- Standard plan names such as `700-A`, `700-B`, `700-C`, `800-A1`, `800-A2`, `800-B`, and `800-C` are named for the DVRS band placement, not the system band.
+- Because of that, a `700` plan may be evaluated against an `800 only` system model, and an `800` plan may be evaluated against a `700 only` system model, when the standard plan definition allows it.
 
 Conditional inputs:
 
@@ -110,12 +128,23 @@ Optional inputs:
 - `Actual licensed DVRS low/high TX`
 - `Actual licensed DVRS low/high RX`
 
-### 2.3 Band Detection
+### 2.3 System-Frequency Configuration And Band Detection
 
-The app should infer candidate band families from the user-entered mobile TX range:
+The UI should ask the user which system frequencies they have, not which plan family they want.
 
-- `700 MHz`: 799-805 MHz mobile TX
-- `800 MHz`: 806-824 MHz mobile TX
+The app should interpret the provided system-frequency inputs as follows:
+
+- `700 only`
+  - one entered range in `799-805 MHz`
+- `800 only`
+  - one entered range in `806-824 MHz`
+- `700 and 800`
+  - one entered `700 MHz` system range and one entered `800 MHz` system range
+
+For single-band entries, the app should infer the system band family from the entered system range:
+
+- `700 MHz`: 799-805 MHz system frequencies
+- `800 MHz`: 806-824 MHz system frequencies
 
 If the input falls outside the supported 700 MHz or 800 MHz windows, the app must stop and show an input error.
 
@@ -123,14 +152,14 @@ If the input falls outside the supported 700 MHz or 800 MHz windows, the app mus
 
 The app must compute and display:
 
-- `System RX` = entered mobile TX range
-- `System TX` = paired mobile receive range inferred from the band plan when deterministic
+- `System RX` = the entered system frequency range
+- `System TX` = paired system transmit range inferred from the applicable deterministic system model
 
 Deterministic defaults:
 
-- `700 MHz`: system TX = mobile TX - 30 MHz
-- `800 MHz`: system TX = mobile TX + 45 MHz
-- `700 and 800 mixed systems`: plan evaluation must use the band-specific mobile TX range attached to each candidate plan, and any returned DVRS recommendation must be computed from that same candidate plan's band-specific system ranges
+- `700 MHz system`: system TX = entered system RX - 30 MHz
+- `800 MHz system`: system TX = entered system RX + 45 MHz
+- `700 and 800 mixed systems`: plan evaluation must use the band-specific system range attached to each candidate plan, and any returned DVRS recommendation must be computed from that same candidate plan's band-specific system ranges
 
 ### 2.5 Technical Plan Engine
 
@@ -158,10 +187,37 @@ Planned standard in-band coverage for v1:
 - 700 MHz: Plans `A`, `B`, `C`
 - 800 MHz: Plans `A1`, `A2`, `B`, `C`
 
+Parent-plan evaluation model:
+
+- The UI must present only parent plans.
+- Some parent plans internally evaluate multiple system-frequency submodels.
+- A parent plan passes if any supported submodel passes.
+- The selected parent result returned to the UI must preserve the system ranges used by the winning submodel.
+
+Required system-model mappings:
+
+- For `800 only` system input, evaluate:
+  - `700-A`
+  - `700-B` using the `800 only` submodel
+  - `700-C` using the `800 only` submodel
+  - `800-C`
+- For `700 only` system input, evaluate:
+  - `700-B` using the `700 only` submodel
+  - `700-C` using the `700 only` submodel
+  - `800-A1` using the `700 only` submodel
+  - `800-A2` using the `700 only` submodel
+  - `800-B` using the `700 only` submodel
+- For `700 and 800` system input, evaluate:
+  - `700-B`
+  - `700-C`
+  - `800-A1`
+  - `800-A2`
+  - `800-B`
+
 For each plan, evaluate:
 
-1. Is the system band compatible with the plan?
-2. Does the mobile TX/RX block fit the plan's allowed windows?
+1. Does the selected system-frequency model map to a supported submodel for the parent plan?
+2. Does the relevant system RX/TX block fit the plan's allowed windows?
 3. If the ordering guide provides fixed DVRS TX/RX ranges for that plan, use those fixed ranges as the plan boundary and compute the recommended feasible DVRS sub-range inside that published plan range.
 4. For fixed-range plans, determine whether at least one paired DVRS channel inside the published fixed range satisfies the spacing, window, and pairing rules.
 5. For non-fixed plans, search the allowed windows for the surviving paired DVRS sub-range that satisfies the spacing, window, and pairing rules.
@@ -214,8 +270,9 @@ The app should render three panes:
 
 1. `Input + System Summary`
 - country
-- detected band
-- user-entered mobile TX low/high
+- selected system-frequency configuration
+- detected system band
+- user-entered system frequency low/high, or both entered 700 and 800 system ranges
 - computed or assumed system TX low/high
 - warnings about assumptions
 
