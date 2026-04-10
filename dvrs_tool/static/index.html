@@ -7,7 +7,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>DVRS In-Band Planner</title>
-    <link rel="stylesheet" href="styles.css?v=20260409e">
+    <link rel="stylesheet" href="styles.css?v=20260410a">
   </head>
   <body>
     <main class="app-shell">
@@ -16,7 +16,7 @@
           <div>
             <p class="eyebrow">Futurecom DVR-LX planning aid</p>
             <h1>DVRS in-band planner</h1>
-            <p class="lede">Enter the system frequency details, review standard plan fit, and carry the preliminary proposal into a more complete ordering summary.</p>
+            <p class="lede">Enter the 700 MHz and 800 MHz system frequency details, review standard plan fit, and carry the preliminary proposal into a more complete ordering summary.</p>
           </div>
         </div>
 
@@ -27,31 +27,27 @@
               <h2>Planning Inputs</h2>
             </div>
             <div class="input-grid">
-              <label class="required-field">
+              <label>
                 Country
                 <select name="country" required>
                   <option>United States</option>
                   <option>Canada</option>
                 </select>
               </label>
-              <label class="required-field">
-                Mobile TX Low (MHz)
-                <input name="mobile_tx_low_mhz" type="number" min="0" step="0.00001" value="806.0" required>
-              </label>
-              <label class="required-field">
-                Mobile TX High (MHz)
-                <input name="mobile_tx_high_mhz" type="number" min="0" step="0.00001" value="807.0" required>
-              </label>
               <label>
                 System Bands
                 <select name="system_band_hint">
-                  <option value="">Auto-detect from inputs</option>
-                  <option>VHF</option>
-                  <option>UHF</option>
-                  <option>700 only</option>
+                  <option selected>700 and 800</option>
                   <option>800 only</option>
-                  <option>700 and 800</option>
                 </select>
+              </label>
+              <label>
+                Mobile TX Low (MHz)
+                <input name="mobile_tx_low_mhz" type="number" min="0" step="0.00001" value="806.0" placeholder="Required" required>
+              </label>
+              <label>
+                Mobile TX High (MHz)
+                <input name="mobile_tx_high_mhz" type="number" min="0" step="0.00001" value="807.0" placeholder="Required" required>
               </label>
               <label class="mixed-band-field" hidden>
                 700 Mobile TX Low (MHz)
@@ -68,14 +64,6 @@
               <label class="mixed-band-field" hidden>
                 800 Mobile TX High (MHz)
                 <input name="mobile_tx_800_high_mhz" type="number" min="0" step="0.00001" placeholder="Required for 700 and 800">
-              </label>
-              <label>
-                System TX Low (MHz)
-                <input name="mobile_rx_low_mhz" type="number" min="0" step="0.00001" placeholder="Optional">
-              </label>
-              <label>
-                System TX High (MHz)
-                <input name="mobile_rx_high_mhz" type="number" min="0" step="0.00001" placeholder="Optional">
               </label>
               <label>
                 DVRS TX (MHz)
@@ -145,13 +133,14 @@
 
           <div class="form-actions">
             <button type="submit">Evaluate plans</button>
+            <button id="reset-planner" type="button" class="secondary-button">Reset</button>
           </div>
         </form>
       </section>
 
       <section id="status-panel" class="status-panel" hidden></section>
 
-      <section class="results-layout">
+      <section id="results-layout" class="results-layout" hidden>
         <article class="panel">
           <div class="panel-heading">
             <p class="eyebrow">Input + system summary</p>
@@ -181,10 +170,10 @@
       </section>
 
       <section class="notice">
-        <strong>Planning note:</strong> Standard in-band filters are mechanically tuned and custom plans need vendor review. A technically valid plan is not a licensing approval; coordinate through the appropriate FCC, ISED, APCO/IMS A, or vendor review path.
+        <strong>Planning note:</strong> This release evaluates 700 MHz and 800 MHz standard plans only. Standard in-band filters are mechanically tuned and custom plans need vendor review. A technically valid plan is not a licensing approval; coordinate through the appropriate FCC, ISED, APCO/IMS A, or vendor review path.
       </section>
     </main>
 
-    <script src="app.js?v=20260409e" defer></script>
+    <script src="app.js?v=20260410a" defer></script>
   </body>
 </html>

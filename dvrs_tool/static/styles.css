@@ -221,10 +221,21 @@ button {
 .form-actions {
   display: flex;
   justify-content: flex-start;
+  gap: 12px;
 }
 
 button:hover {
   background: #1c6049;
+}
+
+.secondary-button {
+  color: var(--ink);
+  background: #eef3f0;
+  border: 1px solid #c6d1cb;
+}
+
+.secondary-button:hover {
+  background: #dde7e1;
 }
 
 button:disabled {
@@ -247,6 +258,12 @@ button:disabled {
   border-color: #b9ddce;
   background: var(--soft-green);
   color: #174834;
+}
+
+.status-panel.warning {
+  border-color: #ecd49a;
+  background: var(--soft-yellow);
+  color: #6d4a0e;
 }
 
 .results-layout {
@@ -479,8 +496,24 @@ button:disabled {
   background: #2366a2;
 }
 
+.viz-bar.mobile-700 {
+  background: #315fb7;
+}
+
+.viz-bar.mobile-800 {
+  background: #1f87a5;
+}
+
 .viz-bar.system {
   background: #23765a;
+}
+
+.viz-bar.system-700 {
+  background: #5c8a2d;
+}
+
+.viz-bar.system-800 {
+  background: #2c9b73;
 }
 
 .viz-bar.dvrs-rx {
@@ -524,8 +557,24 @@ button:disabled {
   background: #2366a2;
 }
 
+.viz-swatch.mobile-700 {
+  background: #315fb7;
+}
+
+.viz-swatch.mobile-800 {
+  background: #1f87a5;
+}
+
 .viz-swatch.system {
   background: #23765a;
+}
+
+.viz-swatch.system-700 {
+  background: #5c8a2d;
+}
+
+.viz-swatch.system-800 {
+  background: #2c9b73;
 }
 
 .viz-swatch.dvrs-rx {

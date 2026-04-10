@@ -3,7 +3,7 @@
 ## 1. Constitution
 
 ### 1.1 Purpose
-Build a web-based application that helps a public-safety radio planner evaluate Futurecom DVR-LX standard in-band configurations from minimal user input, then present:
+Build a web-based application that helps a public-safety radio planner evaluate Futurecom DVR-LX 700 MHz and 800 MHz standard in-band configurations from minimal user input, then present:
 
 - technically valid DVR-LX TX/RX ranges
 - configurations that are not technically feasible
@@ -27,6 +27,9 @@ Technical plan evaluation must follow the Futurecom ordering guide and in-band-o
 5. Modular rules engine.
 Technical validation and regulatory validation must be separate modules so rules can evolve independently.
 
+6. Ordering-guide fixed ranges first.
+When the Futurecom ordering guide lists fixed DVRS TX/RX ranges for a standard plan, those published ranges control the plan definition. The app should recommend the feasible DVRS sub-range inside the published plan range that satisfies the plan rules. Technical validity for that plan means at least one paired DVRS channel inside the published fixed range can satisfy the plan rules.
+
 6. Conservative classification.
 When the app cannot determine licensability with high confidence, it must say "coordination required" rather than "valid."
 
@@ -36,17 +39,21 @@ The final output must look usable by radio technicians and procurement staff, no
 ### 1.3 Scope
 In scope:
 
-- Futurecom DVR-LX standard in-band configurations
+- Futurecom DVR-LX standard 700 MHz and 800 MHz in-band configurations
 - country toggle for `United States` and `Canada`
 - user input of low/high mobile transmit frequencies
-- inferred band detection where possible
+- inferred 700 MHz / 800 MHz band detection where possible
+- mixed 700 MHz and 800 MHz system evaluation
 - computed system TX/RX summary
 - proposed DVRS TX/RX ranges for each standard plan
+  For fixed-range plans, these should be the recommended feasible sub-range inside the ordering-guide plan range, not a range that overlaps the system frequencies in violation of the plan spacing rules.
 - final-entry fields for actual licensed DVRS frequencies
 - plan-by-plan feasibility and regulatory status
 
 Out of scope for v1:
 
+- VHF technical plan support
+- UHF technical plan support
 - direct FCC ULS or ISED license lookups
 - automatic frequency coordination
 - custom Futurecom filtering plans
@@ -71,7 +78,6 @@ The app must encode the following Futurecom guidance:
 - In-band filters are mechanically tuned and cannot be re-tuned in the field.
 - In-band MSU transmit power must not exceed 50 W in DVRS-enabled modes.
 - 700/800 in-band plans use a maximum DVR-LX passband of 1 MHz in the 2019 guidance, while the newer ordering guide expands certain 800 MHz plan windows; the rules engine should version the plan definitions explicitly and default to the latest ordering guide used by the project.
-- VHF and UHF plans use much narrower DVRS passbands than 700/800 plans.
 - The supplemental-ordering-form layout is the right model for the final summary panel.
 
 ### 2.2 User Inputs
@@ -86,12 +92,12 @@ Derived inputs:
 
 - detected band family
 - detected mobile TX passband
-- candidate mobile RX range, where the offset is deterministic
+- candidate mobile RX range, where the offset is deterministic for 700 MHz and 800 MHz plans
 
 Conditional inputs:
 
 - `Manual mobile receive override`
-Use only when the app cannot safely infer the system receive/transmit pair structure from the transmit inputs alone, especially in VHF or 380-430 MHz edge cases.
+Use only when the project later expands beyond deterministic 700 MHz and 800 MHz pairing rules.
 
 Optional inputs:
 
@@ -106,11 +112,8 @@ The app should infer candidate band families from the user-entered mobile TX ran
 
 - `700 MHz`: 799-805 MHz mobile TX
 - `800 MHz`: 806-824 MHz mobile TX
-- `VHF`: 136-174 MHz mobile TX
-- `UHF 380-430`: 380-430 MHz mobile TX
-- `UHF 450-470`: 450-470 MHz mobile TX
 
-If the input spans multiple band families or falls outside all supported families, the app must stop and show an input error.
+If the input falls outside the supported 700 MHz or 800 MHz windows, the app must stop and show an input error.
 
 ### 2.4 System Frequency Computation
 
@@ -123,18 +126,7 @@ Deterministic defaults:
 
 - `700 MHz`: system TX = mobile TX - 30 MHz
 - `800 MHz`: system TX = mobile TX + 45 MHz
-- `450-470 MHz`: default paired system TX = mobile TX - 5 MHz
-
-Non-deterministic or jurisdiction-sensitive cases:
-
-- `VHF`
-- `380-430 MHz`
-
-For those cases, the app should:
-
-- attempt a rule-based pairing inference only when the entered channels match a known standard split pattern
-- otherwise request or enable a manual receive-range override
-- label the output `Computed from manual pairing assumption`
+- `700 and 800 mixed systems`: plan evaluation must use the band-specific mobile TX range attached to each candidate plan
 
 ### 2.5 Technical Plan Engine
 
@@ -153,31 +145,31 @@ Each plan definition should contain:
 - `minSeparationRules`
 - `maxDvrsPassband`
 - `maxMsuPassband`
+- `fixedDvrsTxRange`
+- `fixedDvrsRxRange`
 - `notes`
 
 Planned standard in-band coverage for v1:
 
 - 700 MHz: Plans `A`, `B`, `C`
 - 800 MHz: Plans `A1`, `A2`, `B`, `C`
-- VHF duplex: Plans `A`, `B`
-- VHF simplex: Plans `D1`, `D2`, `E1`, `E2`
-- UHF 380-430: Plans `A1`, `A2`, `A3`, `A4`, `B1`, `B2`, `B3`, `B4`, `C`, `D`
-- UHF 450-470: Plans `A`, `B`
 
 For each plan, evaluate:
 
 1. Is the system band compatible with the plan?
 2. Does the mobile TX/RX block fit the plan's allowed windows?
-3. Are minimum separations met?
-4. Is the maximum DVRS passband respected?
-5. Is required channel spacing or duplex split respected?
+3. If the ordering guide provides fixed DVRS TX/RX ranges for that plan, use those fixed ranges as the plan boundary and compute the recommended feasible DVRS sub-range inside that published plan range.
+4. For fixed-range plans, determine whether at least one paired DVRS channel inside the published fixed range satisfies the spacing, window, and pairing rules.
+5. The proposed DVRS TX/RX ranges returned to the user must themselves satisfy the selected plan's required separations.
+6. If a plan does not define a fixed published DVRS range, derive a candidate within the allowed windows and then apply spacing validation.
+7. Is required channel spacing or duplex split respected?
 
 Return:
 
 - boolean pass/fail
 - list of failures
-- resulting valid DVRS TX window
-- resulting valid DVRS RX window
+- resulting proposed DVRS TX range
+- resulting proposed DVRS RX range
 
 ### 2.6 Regulatory Rules Engine
 
@@ -202,10 +194,6 @@ Use a conservative model:
 
 - `700 MHz`: treat 769-775 / 799-805 as public-safety-capable.
 - `800 MHz`: treat public-safety use as plausible within the 800 public-safety pool and interoperability structure, but note border-area and channel-category constraints.
-- `VHF`: treat only portions of 150-174 MHz as generally public-safety-plausible; note that not all of 136-174 is public safety.
-- `VHF mobile repeater note`: highlight the FCC public-safety mobile repeater channels at 173.2375, 173.2625, 173.2875, and 173.3125 MHz as especially relevant to the Futurecom VHF in-band narrative.
-- `380-430 MHz`: treat as likely not licensable for typical non-federal U.S. public-safety applicants except specialized or federal contexts; default to red unless the project later adds a federal profile.
-- `450-470 MHz`: treat as coordination-required, not automatically green, because public safety has assignable channels there but not across the full band.
 
 #### Canada rules for v1
 
@@ -214,11 +202,6 @@ Use a similarly conservative model:
 - `768-776 / 798-806 MHz`: treat as public-safety-capable.
 - `821-824 / 866-869 MHz`: treat as specifically public-safety-capable in 800 MHz.
 - `806-821 / 851-866 MHz`: treat as broader land-mobile spectrum that may be used depending on sub-allocation and coordination; mark coordination-required unless a later ruleset refines it by channel block.
-- `VHF 148-174 MHz`: treat as coordination-required because it is widely used for land mobile, including public safety, but not uniformly reserved for public safety.
-- `136-148 MHz`: treat as mostly not suitable for ordinary public-safety licensing in v1 unless a later ruleset adds a governmental/federal profile.
-- `406.1-430 MHz`: treat as land-mobile/coordinated and therefore coordination-required.
-- `380-406.1 MHz`: treat as likely not licensable in v1.
-- `450-470 MHz`: treat as coordination-required.
 
 ### 2.7 Result Presentation
 
@@ -259,7 +242,7 @@ The app should render three panes:
 - Rules must be data-driven JSON or TypeScript objects.
 - Regulatory rules must be versioned separately from technical plan rules.
 - Every calculation should be unit-tested.
-- App should support future addition of `federal`, `rail`, or `utility` licensing profiles without rewriting the core engine.
+- App should support future addition of `VHF`, `UHF`, `federal`, `rail`, or `utility` profiles without rewriting the core engine.
 
 ## 3. Implementation Plan
 
@@ -278,7 +261,7 @@ Deliverable:
 - Implement band detection.
 - Implement system TX/RX computation.
 - Implement plan-by-plan technical validation.
-- Add unit tests for each standard plan family.
+- Add unit tests for each supported 700/800 standard plan family.
 
 Deliverable:
 
@@ -354,9 +337,15 @@ Deliverable:
 ## 5. Important Assumptions
 
 1. The app should prefer the more recent ordering guide logic when the older narrative document and newer ordering guide differ.
+   When the ordering guide publishes fixed standard-plan DVRS ranges, those ranges define the allowed recommendation boundary, while the returned proposed DVRS ranges must be a spacing-compliant subset when overlap would otherwise occur.
 2. The app should target typical state, provincial, county, municipal, and agency public-safety users, not federal-only licensing profiles, in v1.
 3. The app should classify uncertain licensability as `coordination required`.
-4. The app should support manual receive-range override because transmit-only input is insufficient for every VHF and 380-430 scenario.
+4. The app should preserve a data model flexible enough to add VHF and UHF planning later, even though v1 only evaluates 700 MHz and 800 MHz plans.
+
+## 7. Roadmap
+
+- Add VHF standard-plan support in a future release once the team is ready to reintroduce manual-pairing and narrow-passband workflows.
+- Add UHF standard-plan support in a future release once the team is ready to reintroduce the 380-430 MHz and 450-470 MHz technical and regulatory rulesets.
 
 ## 6. Research Notes and Source Basis
 

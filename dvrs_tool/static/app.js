@@ -4,6 +4,8 @@ const systemSummary = document.querySelector("#system-summary");
 const planResults = document.querySelector("#plan-results");
 const orderingSummary = document.querySelector("#ordering-summary");
 const downloadPdfButton = document.querySelector("#download-pdf");
+const resetPlannerButton = document.querySelector("#reset-planner");
+const resultsLayout = document.querySelector("#results-layout");
 const apiBaseUrl = window.location.protocol === "file:" ? "http://127.0.0.1:8000" : "";
 let latestPayload = null;
 let latestInputPrecision = null;
@@ -49,6 +51,14 @@ function captureInputPrecision(formData) {
     mobile_tx_range: {
       low: decimalPlacesFromInput(formData.get("mobile_tx_low_mhz")),
       high: decimalPlacesFromInput(formData.get("mobile_tx_high_mhz")),
+    },
+    mobile_tx_700_range: {
+      low: decimalPlacesFromInput(formData.get("mobile_tx_700_low_mhz")),
+      high: decimalPlacesFromInput(formData.get("mobile_tx_700_high_mhz")),
+    },
+    mobile_tx_800_range: {
+      low: decimalPlacesFromInput(formData.get("mobile_tx_800_low_mhz")),
+      high: decimalPlacesFromInput(formData.get("mobile_tx_800_high_mhz")),
     },
     mobile_rx_range: {
       low: decimalPlacesFromInput(formData.get("mobile_rx_low_mhz")),
@@ -104,6 +114,7 @@ function renderError(message) {
   const safeMessage = escapeHtml(message);
   latestPayload = null;
   downloadPdfButton.disabled = true;
+  hideResults();
   systemSummary.className = "empty-state";
   systemSummary.innerHTML = `Evaluation did not complete. ${safeMessage}`;
   planResults.className = "empty-state";
@@ -169,6 +180,35 @@ function clearStatus() {
   statusPanel.className = "status-panel";
 }
 
+function getEvaluationStatus(data) {
+  const notes = data?.ordering_summary?.notes || [];
+  const warningNote = notes.find((note) =>
+    note.includes("Consult a Motorola Presale Engineer")
+    || note.includes("No technically valid standard plan proposal was produced.")
+  );
+  if (warningNote) {
+    return { message: warningNote, type: "warning" };
+  }
+  return null;
+}
+
+function showResults() {
+  resultsLayout.hidden = false;
+}
+
+function hideResults() {
+  resultsLayout.hidden = true;
+}
+
+function resetRenderedResults() {
+  systemSummary.className = "empty-state";
+  systemSummary.innerHTML = "Run an evaluation to see the detected band, system pairing, and assumptions.";
+  planResults.className = "empty-state";
+  planResults.innerHTML = "All standard plans for the detected band will appear here.";
+  orderingSummary.className = "empty-state";
+  orderingSummary.innerHTML = "The best preliminary standard plan will populate this summary.";
+}
+
 function isOpenedDirectly() {
   return window.location.protocol === "file:";
 }
@@ -228,13 +268,24 @@ function formatInputValue(value) {
   return String(value);
 }
 
-function buildVisualizationSegments(plan, systemSummary) {
-  const segments = [
-    { label: "Mobile TX", range: systemSummary.mobile_tx_range, className: "mobile" },
-    { label: "System TX", range: systemSummary.system_tx_range, className: "system" },
-    { label: "DVRS RX", range: plan.proposed_dvrs_rx_range, className: "dvrs-rx" },
-    { label: "DVRS TX", range: plan.proposed_dvrs_tx_range, className: "dvrs-tx" },
-  ];
+function buildVisualizationSegments(plan, summary) {
+  const hasMixedSegments = summary.detected_band === "700 and 800"
+    && (summary.mobile_tx_700_range || summary.mobile_tx_800_range);
+  const segments = hasMixedSegments
+    ? [
+      { label: "700 Mobile TX", range: summary.mobile_tx_700_range, className: "mobile-700" },
+      { label: "800 Mobile TX", range: summary.mobile_tx_800_range, className: "mobile-800" },
+      { label: "700 System TX", range: summary.system_tx_700_range, className: "system-700" },
+      { label: "800 System TX", range: summary.system_tx_800_range, className: "system-800" },
+      { label: "DVRS RX", range: plan.proposed_dvrs_rx_range, className: "dvrs-rx" },
+      { label: "DVRS TX", range: plan.proposed_dvrs_tx_range, className: "dvrs-tx" },
+    ]
+    : [
+      { label: "Mobile TX", range: plan.mobile_tx_range, className: "mobile" },
+      { label: "System TX", range: plan.system_tx_range, className: "system" },
+      { label: "DVRS RX", range: plan.proposed_dvrs_rx_range, className: "dvrs-rx" },
+      { label: "DVRS TX", range: plan.proposed_dvrs_tx_range, className: "dvrs-tx" },
+    ];
 
   const numericRanges = segments
     .map((segment) => segment.range)
@@ -315,8 +366,8 @@ function buildVisualizationTicks(segments) {
   return ticks;
 }
 
-function renderPlanVisualization(plan, systemSummary) {
-  const segments = buildVisualizationSegments(plan, systemSummary);
+function renderPlanVisualization(plan, summary) {
+  const segments = buildVisualizationSegments(plan, summary);
   const axisSegments = segments.filter((segment) => !segment.unavailable);
   const ticks = buildVisualizationTicks(segments);
 
@@ -363,22 +414,36 @@ function renderPlanVisualization(plan, systemSummary) {
 function renderSystemSummary(summary) {
   const warnings = summary.warnings || [];
   const mobileTxPrecision = latestInputPrecision?.mobile_tx_range;
+  const mobile700Precision = latestInputPrecision?.mobile_tx_700_range;
+  const mobile800Precision = latestInputPrecision?.mobile_tx_800_range;
   const mobileRxPrecision = latestInputPrecision?.mobile_rx_range || mobileTxPrecision;
+  const isMixedBand = summary.detected_band === "700 and 800";
+  const baseMetrics = isMixedBand ? "" : `
+      <div class="metric"><span>Mobile TX</span><strong>${escapeHtml(formatRange(summary.mobile_tx_range, mobileTxPrecision))}</strong></div>
+      <div class="metric"><span>Mobile RX</span><strong>${escapeHtml(formatRange(summary.mobile_rx_range, mobileRxPrecision))}</strong></div>
+      <div class="metric"><span>System RX</span><strong>${escapeHtml(formatRange(summary.system_rx_range, mobileTxPrecision))}</strong></div>
+      <div class="metric"><span>System TX</span><strong>${escapeHtml(formatRange(summary.system_tx_range, mobileRxPrecision))}</strong></div>
+  `;
+  const mixedSystemMetrics = summary.detected_band === "700 and 800" ? `
+      <div class="metric"><span>700 Mobile TX</span><strong>${escapeHtml(formatRange(summary.mobile_tx_700_range, mobile700Precision))}</strong></div>
+      <div class="metric"><span>700 System TX</span><strong>${escapeHtml(formatRange(summary.system_tx_700_range, mobile700Precision))}</strong></div>
+      <div class="metric"><span>800 Mobile TX</span><strong>${escapeHtml(formatRange(summary.mobile_tx_800_range, mobile800Precision))}</strong></div>
+      <div class="metric"><span>800 System TX</span><strong>${escapeHtml(formatRange(summary.system_tx_800_range, mobile800Precision))}</strong></div>
+  ` : "";
   systemSummary.className = "summary";
   systemSummary.innerHTML = `
     <div class="metric-grid">
       <div class="metric"><span>Detected band</span><strong>${escapeHtml(summary.detected_band)}</strong></div>
       <div class="metric"><span>Pairing source</span><strong>${escapeHtml(formatStatus(summary.pairing_source))}</strong></div>
-      <div class="metric"><span>Mobile TX</span><strong>${escapeHtml(formatRange(summary.mobile_tx_range, mobileTxPrecision))}</strong></div>
-      <div class="metric"><span>Mobile RX</span><strong>${escapeHtml(formatRange(summary.mobile_rx_range, mobileRxPrecision))}</strong></div>
-      <div class="metric"><span>System RX</span><strong>${escapeHtml(formatRange(summary.system_rx_range, mobileTxPrecision))}</strong></div>
-      <div class="metric"><span>System TX</span><strong>${escapeHtml(formatRange(summary.system_tx_range, mobileRxPrecision))}</strong></div>
+      ${baseMetrics}
+      ${mixedSystemMetrics}
     </div>
-    ${renderMessages(warnings)}
+    ${isMixedBand ? "" : renderMessages(warnings)}
   `;
 }
 
-function renderPlan(plan, systemSummary) {
+function renderPlan(plan, summary) {
+  const isTechnicallyValid = plan.technical_status === "TECHNICALLY_VALID";
   const reasons = [
     ...(plan.failure_reasons || []),
     ...(plan.regulatory_reasons || []),
@@ -399,10 +464,10 @@ function renderPlan(plan, systemSummary) {
         <span class="badge ${badgeClass(plan.regulatory_status)}">${escapeHtml(formatStatus(plan.regulatory_status))}</span>
       </div>
       <div class="range-row">
-        <div class="metric"><span>Proposed DVRS TX</span><strong>${escapeHtml(formatRange(plan.proposed_dvrs_tx_range))}</strong></div>
-        <div class="metric"><span>Proposed DVRS RX</span><strong>${escapeHtml(formatRange(plan.proposed_dvrs_rx_range))}</strong></div>
+        <div class="metric"><span>Proposed DVRS TX</span><strong>${escapeHtml(isTechnicallyValid ? formatRange(plan.proposed_dvrs_tx_range) : "Not shown for invalid plans")}</strong></div>
+        <div class="metric"><span>Proposed DVRS RX</span><strong>${escapeHtml(isTechnicallyValid ? formatRange(plan.proposed_dvrs_rx_range) : "Not shown for invalid plans")}</strong></div>
       </div>
-      ${renderPlanVisualization(plan, systemSummary)}
+      ${isTechnicallyValid ? renderPlanVisualization(plan, summary) : ""}
       <ul class="reason-block">
         ${reasons.length ? reasons.map((reason) => `<li>${escapeHtml(reason)}</li>`).join("") : "<li>No additional rule notes returned.</li>"}
       </ul>
@@ -410,9 +475,9 @@ function renderPlan(plan, systemSummary) {
   `;
 }
 
-function renderPlans(plans, systemSummary) {
+function renderPlans(plans, summary) {
   planResults.className = "plan-list";
-  planResults.innerHTML = plans.map((plan) => renderPlan(plan, systemSummary)).join("");
+  planResults.innerHTML = plans.map((plan) => renderPlan(plan, summary)).join("");
 }
 
 function getVisiblePlans(data) {
@@ -453,9 +518,29 @@ function renderOrdering(data) {
 }
 
 function renderResponse(data) {
+  showResults();
   renderSystemSummary(data.system_summary);
   renderPlans(getVisiblePlans(data), data.system_summary);
   renderOrdering(data);
+}
+
+function applyDefaultDate() {
+  const dateInput = form.querySelector('input[name="quote_date"]');
+  if (dateInput && !dateInput.value) {
+    dateInput.value = new Date().toISOString().slice(0, 10);
+  }
+}
+
+function resetPlanner() {
+  form.reset();
+  latestPayload = null;
+  latestInputPrecision = null;
+  downloadPdfButton.disabled = true;
+  clearStatus();
+  resetRenderedResults();
+  hideResults();
+  applyDefaultDate();
+  syncSystemBandFields();
 }
 
 async function evaluatePlans(event) {
@@ -488,7 +573,12 @@ async function evaluatePlans(event) {
     renderResponse(payload.data);
     latestPayload = payloadToEvaluate;
     downloadPdfButton.disabled = false;
-    setStatus("Evaluation complete.");
+    const evaluationStatus = getEvaluationStatus(payload.data);
+    if (evaluationStatus) {
+      setStatus(evaluationStatus.message, evaluationStatus.type);
+    } else {
+      clearStatus();
+    }
   } catch (error) {
     const message = error.message || "The API returned an error.";
     renderError(message);
@@ -528,6 +618,7 @@ async function downloadOrderingPdf() {
 
 form.addEventListener("submit", evaluatePlans);
 downloadPdfButton.addEventListener("click", downloadOrderingPdf);
+resetPlannerButton?.addEventListener("click", resetPlanner);
 
 function syncSystemBandFields() {
   const systemBandSelect = form.querySelector('select[name="system_band_hint"]');
@@ -569,12 +660,9 @@ function syncSystemBandFields() {
 form.querySelector('select[name="system_band_hint"]')?.addEventListener("change", syncSystemBandFields);
 syncSystemBandFields();
 
-const dateInput = form.querySelector('input[name="quote_date"]');
-if (dateInput && !dateInput.value) {
-  dateInput.value = new Date().toISOString().slice(0, 10);
-}
+applyDefaultDate();
+resetRenderedResults();
+hideResults();
 if (isOpenedDirectly()) {
   setStatus("Open this app at http://127.0.0.1:8000/ after starting uvicorn. Direct file mode cannot call the backend API.", "error");
-} else {
-  form.requestSubmit();
 }

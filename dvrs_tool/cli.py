@@ -13,7 +13,7 @@ from .models import CalculationRequest, Country
 
 HELP_EPILOG = """Examples:
   python -m dvrs_tool --country "United States" --mobile-tx-low 806.0 --mobile-tx-high 809.0
-  python -m dvrs_tool --country Canada --mobile-tx-low 151.0 --mobile-tx-high 151.2 --mobile-rx-low 156.0 --mobile-rx-high 156.2
+  python -m dvrs_tool --country Canada --mobile-tx-low 803.0 --mobile-tx-high 804.0
 
 Returned JSON shape:
   {

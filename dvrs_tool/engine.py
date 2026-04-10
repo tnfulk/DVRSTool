@@ -206,33 +206,8 @@ class DVRSCalculationEngine:
     def _resolve_system_band(self, request: CalculationRequest) -> BandFamily:
         if request.system_band_hint == SystemBandHint.BAND_700_AND_800:
             return BandFamily.BAND_700_800
-        if request.system_band_hint == SystemBandHint.BAND_700_ONLY:
-            return BandFamily.BAND_700
         if request.system_band_hint == SystemBandHint.BAND_800_ONLY:
             return BandFamily.BAND_800
-        if request.system_band_hint == SystemBandHint.VHF:
-            return BandFamily.VHF
-        if request.system_band_hint == SystemBandHint.UHF:
-            if request.mobile_tx_low_mhz is None or request.mobile_tx_high_mhz is None:
-                raise UnsupportedBandError(
-                    code="UNSUPPORTED_OR_AMBIGUOUS_BAND",
-                    message="Mobile TX range is required to resolve which UHF family applies.",
-                    details={
-                        "mobile_tx_low_mhz": request.mobile_tx_low_mhz,
-                        "mobile_tx_high_mhz": request.mobile_tx_high_mhz,
-                    },
-                    rule_violations=[
-                        {
-                            "code": "UNSUPPORTED_OR_AMBIGUOUS_BAND",
-                            "message": "Mobile TX range is required to resolve which UHF family applies.",
-                            "details": {
-                                "mobile_tx_low_mhz": request.mobile_tx_low_mhz,
-                                "mobile_tx_high_mhz": request.mobile_tx_high_mhz,
-                            },
-                        }
-                    ],
-                )
-            return self._detect_band(request.mobile_tx_low_mhz, request.mobile_tx_high_mhz)
         if request.mobile_tx_low_mhz is None or request.mobile_tx_high_mhz is None:
             raise UnsupportedBandError(
                 code="UNSUPPORTED_OR_AMBIGUOUS_BAND",
@@ -255,61 +230,80 @@ class DVRSCalculationEngine:
         return self._detect_band(request.mobile_tx_low_mhz, request.mobile_tx_high_mhz)
 
     def _detect_band(self, low_mhz: float, high_mhz: float) -> BandFamily:
-        candidate_ranges = [
-            (BandFamily.BAND_700, 799.0, 805.0),
-            (BandFamily.BAND_800, 806.0, 824.0),
-            (BandFamily.VHF, 136.0, 174.0),
-            (BandFamily.UHF_380, 380.0, 430.0),
-            (BandFamily.UHF_450, 450.0, 470.0),
-        ]
-        matches = [
-            band
-            for band, band_low, band_high in candidate_ranges
-            if low_mhz >= band_low and high_mhz <= band_high
-        ]
-        if len(matches) != 1:
+        if low_mhz >= 799.0 and high_mhz <= 805.0:
             raise UnsupportedBandError(
-                code="UNSUPPORTED_OR_AMBIGUOUS_BAND",
-                message="Mobile TX range does not fit exactly one supported DVRS band family.",
+                code="UNSUPPORTED_700_ONLY_SYSTEM",
+                message="Standard configuration plans do not support systems that only have 700 MHz channels.",
                 details={
                     "mobile_tx_low_mhz": low_mhz,
                     "mobile_tx_high_mhz": high_mhz,
-                    "supported_mobile_tx_windows": {
-                        "700 MHz": [799.0, 805.0],
-                        "800 MHz": [806.0, 824.0],
-                        "VHF": [136.0, 174.0],
-                        "UHF 380-430": [380.0, 430.0],
-                        "UHF 450-470": [450.0, 470.0],
-                    },
+                    "supported_models": ["800 only", "700 and 800"],
+                    "rule": "700-only systems are not standard-plan candidates",
                 },
                 rule_violations=[
                     {
-                        "code": "UNSUPPORTED_OR_AMBIGUOUS_BAND",
-                        "message": "Mobile TX range does not fit exactly one supported DVRS band family.",
+                        "code": "UNSUPPORTED_700_ONLY_SYSTEM",
+                        "message": "Standard configuration plans do not support systems that only have 700 MHz channels.",
                         "details": {
                             "mobile_tx_low_mhz": low_mhz,
                             "mobile_tx_high_mhz": high_mhz,
-                            "supported_mobile_tx_windows": {
-                                "700 MHz": [799.0, 805.0],
-                                "800 MHz": [806.0, 824.0],
-                                "VHF": [136.0, 174.0],
-                                "UHF 380-430": [380.0, 430.0],
-                                "UHF 450-470": [450.0, 470.0],
-                            },
+                            "supported_models": ["800 only", "700 and 800"],
+                            "rule": "700-only systems are not standard-plan candidates",
                         },
                     }
                 ],
             )
-        return matches[0]
+
+        if low_mhz >= 806.0 and high_mhz <= 824.0:
+            return BandFamily.BAND_800
+
+        raise UnsupportedBandError(
+            code="UNSUPPORTED_OR_AMBIGUOUS_BAND",
+            message="Mobile TX range does not fit exactly one supported DVRS band family.",
+            details={
+                "mobile_tx_low_mhz": low_mhz,
+                "mobile_tx_high_mhz": high_mhz,
+                "supported_mobile_tx_windows": {
+                    "800 MHz": [806.0, 824.0],
+                },
+            },
+            rule_violations=[
+                {
+                    "code": "UNSUPPORTED_OR_AMBIGUOUS_BAND",
+                    "message": "Mobile TX range does not fit exactly one supported DVRS band family.",
+                    "details": {
+                        "mobile_tx_low_mhz": low_mhz,
+                        "mobile_tx_high_mhz": high_mhz,
+                        "supported_mobile_tx_windows": {
+                            "800 MHz": [806.0, 824.0],
+                        },
+                    },
+                }
+            ],
+        )
 
     def _build_system_summary(self, request: CalculationRequest, band: BandFamily) -> SystemSummary:
         if band == BandFamily.BAND_700_800:
+            mobile_tx_700 = FrequencyRange(request.mobile_tx_700_low_mhz, request.mobile_tx_700_high_mhz)
+            mobile_tx_800 = FrequencyRange(request.mobile_tx_800_low_mhz, request.mobile_tx_800_high_mhz)
+            system_tx_700 = FrequencyRange(
+                self._round_freq(request.mobile_tx_700_low_mhz - 30.0),
+                self._round_freq(request.mobile_tx_700_high_mhz - 30.0),
+            )
+            system_tx_800 = FrequencyRange(
+                self._round_freq(request.mobile_tx_800_low_mhz + 45.0),
+                self._round_freq(request.mobile_tx_800_high_mhz + 45.0),
+            )
             mobile_tx = FrequencyRange(
                 min(request.mobile_tx_700_low_mhz, request.mobile_tx_800_low_mhz),
                 max(request.mobile_tx_700_high_mhz, request.mobile_tx_800_high_mhz),
             )
         else:
             mobile_tx = FrequencyRange(request.mobile_tx_low_mhz, request.mobile_tx_high_mhz)
+            mobile_tx_700 = None
+            mobile_tx_800 = None
+            system_tx_700 = None
+            system_tx_800 = None
         warnings: list[str] = []
         pairing_source = PairingSource.UNAVAILABLE
         mobile_rx: FrequencyRange | None = None
@@ -334,21 +328,10 @@ class DVRSCalculationEngine:
             )
             system_tx = mobile_rx
             pairing_source = PairingSource.DETERMINISTIC
-        elif band == BandFamily.UHF_450:
-            mobile_rx = FrequencyRange(
-                self._round_freq(request.mobile_tx_low_mhz - 5.0),
-                self._round_freq(request.mobile_tx_high_mhz - 5.0),
-            )
-            system_tx = mobile_rx
-            pairing_source = PairingSource.DETERMINISTIC
         elif band == BandFamily.BAND_700_800:
+            pairing_source = PairingSource.DETERMINISTIC
             warnings.append(
                 "Mixed 700 and 800 system selected. Plan evaluation uses the dedicated 700 MHz or 800 MHz mobile TX range for each candidate plan."
-            )
-        else:
-            warnings.append(
-                "This band does not have a deterministic system pairing in v1. "
-                "Provide mobile RX values for duplex-plan validation."
             )
 
         return SystemSummary(
@@ -358,6 +341,12 @@ class DVRSCalculationEngine:
             system_rx_range=mobile_tx,
             system_tx_range=system_tx,
             pairing_source=pairing_source,
+            mobile_tx_700_range=mobile_tx_700,
+            system_rx_700_range=mobile_tx_700,
+            system_tx_700_range=system_tx_700,
+            mobile_tx_800_range=mobile_tx_800,
+            system_rx_800_range=mobile_tx_800,
+            system_tx_800_range=system_tx_800,
             warnings=warnings,
         )
 
@@ -401,29 +390,7 @@ class DVRSCalculationEngine:
         request: CalculationRequest,
         plan: TechnicalPlan,
     ) -> CalculationRequest:
-        if plan.band_family != BandFamily.UHF_380:
-            return request
-        if request.mobile_rx_low_mhz is not None and request.mobile_rx_high_mhz is not None:
-            return request
-        if request.mobile_tx_low_mhz is None or request.mobile_tx_high_mhz is None:
-            return request
-        if plan.pair_offset_mhz is None:
-            return request
-
-        if plan.pair_direction == "tx_above_rx":
-            mobile_rx_low = self._round_freq(request.mobile_tx_low_mhz - plan.pair_offset_mhz)
-            mobile_rx_high = self._round_freq(request.mobile_tx_high_mhz - plan.pair_offset_mhz)
-        elif plan.pair_direction == "tx_below_rx":
-            mobile_rx_low = self._round_freq(request.mobile_tx_low_mhz + plan.pair_offset_mhz)
-            mobile_rx_high = self._round_freq(request.mobile_tx_high_mhz + plan.pair_offset_mhz)
-        else:
-            return request
-
-        return replace(
-            request,
-            mobile_rx_low_mhz=mobile_rx_low,
-            mobile_rx_high_mhz=mobile_rx_high,
-        )
+        return request
 
     def _build_active_window_summary(
         self,
@@ -462,7 +429,12 @@ class DVRSCalculationEngine:
             self._evaluate_plan_variant(request, system_summary, plan, variant_label, variant_plan)
             for variant_label, variant_plan in self._plan_variants(plan)
         ]
-        return self._select_best_plan_result(request, plan, candidate_results)
+        selected_result = self._select_best_plan_result(request, plan, candidate_results)
+        selected_result.mobile_tx_range = system_summary.mobile_tx_range
+        selected_result.mobile_rx_range = system_summary.mobile_rx_range
+        selected_result.system_tx_range = system_summary.system_tx_range
+        selected_result.system_rx_range = system_summary.system_rx_range
+        return selected_result
 
     def _evaluate_plan_variant(
         self,
@@ -484,14 +456,16 @@ class DVRSCalculationEngine:
             variant_plan,
         )
         if active_window_violation is not None:
+            preview_rx = self._preview_plan_rx_range(variant_plan)
+            preview_tx = self._preview_plan_tx_range(variant_plan, preview_rx, derived_pair_offset)
             return PlanResult(
                 plan_id=plan.id,
                 display_name=plan.display_name,
                 technical_status=TechnicalStatus.INVALID,
                 regulatory_status=RegulatoryStatus.NOT_EVALUATED,
                 confidence=0.0,
-                proposed_dvrs_tx_range=None,
-                proposed_dvrs_rx_range=None,
+                proposed_dvrs_tx_range=preview_tx,
+                proposed_dvrs_rx_range=preview_rx,
                 mount_compatibility=variant_plan.mount_compatibility,
                 failure_reasons=[active_window_violation.message],
                 rule_violations=[active_window_violation],
@@ -557,7 +531,7 @@ class DVRSCalculationEngine:
                 notes=notes,
             )
 
-        proposed_tx = self._derive_tx_from_rx(proposed_rx, variant_plan, derived_pair_offset)
+        proposed_tx = self._propose_dvrs_tx(proposed_rx, variant_plan, derived_pair_offset)
         if proposed_tx is None:
             violation = RuleViolation(
                 code="UNABLE_TO_DERIVE_DVRS_TX",
@@ -709,11 +683,7 @@ class DVRSCalculationEngine:
         )
 
     def _plan_variants(self, plan: TechnicalPlan) -> list[tuple[str, TechnicalPlan]]:
-        variants = [("native", plan)]
-        interop_variant = self._build_interop_variant(plan)
-        if interop_variant is not None:
-            variants.append(("interop", interop_variant))
-        return variants
+        return [("native", plan)]
 
     def _candidate_plans(
         self,
@@ -740,6 +710,9 @@ class DVRSCalculationEngine:
         if hinted_plans is not None:
             return hinted_plans
 
+        if system_band == BandFamily.BAND_800:
+            return self._plans_for_system_band_hint(SystemBandHint.BAND_800_ONLY) or []
+
         return list(TECHNICAL_PLANS[system_band])
 
     def _plans_for_system_band_hint(
@@ -749,20 +722,14 @@ class DVRSCalculationEngine:
         if system_band_hint is None:
             return None
 
-        if system_band_hint == SystemBandHint.VHF:
-            return list(TECHNICAL_PLANS[BandFamily.VHF])
-
-        if system_band_hint == SystemBandHint.UHF:
-            return [
-                *TECHNICAL_PLANS[BandFamily.UHF_380],
-                *TECHNICAL_PLANS[BandFamily.UHF_450],
-            ]
-
-        if system_band_hint == SystemBandHint.BAND_700_ONLY:
-            return list(TECHNICAL_PLANS[BandFamily.BAND_700])
-
         if system_band_hint == SystemBandHint.BAND_800_ONLY:
-            return list(TECHNICAL_PLANS[BandFamily.BAND_800])
+            eight_hundred_only_plan_ids = {"700-A", "800-C"}
+            return [
+                plan
+                for family in (BandFamily.BAND_700, BandFamily.BAND_800)
+                for plan in TECHNICAL_PLANS[family]
+                if plan.id in eight_hundred_only_plan_ids
+            ]
 
         if system_band_hint == SystemBandHint.BAND_700_AND_800:
             mixed_plan_ids = {"700-B", "700-C", "800-A1", "800-A2", "800-B"}
@@ -948,6 +915,27 @@ class DVRSCalculationEngine:
         plan: TechnicalPlan,
         requested_passband: float,
     ) -> FrequencyRange | None:
+        if plan.fixed_dvrs_rx_range is not None:
+            relation_options = [None]
+            if system_summary.mobile_rx_range is not None:
+                relation_options = ["tx_before_mobile_rx", "tx_after_mobile_rx"]
+
+            best_candidate: FrequencyRange | None = None
+            best_width = -1.0
+            for relation in relation_options:
+                candidate = self._solve_feasible_rx_interval(
+                    system_summary,
+                    plan,
+                    plan.fixed_dvrs_rx_range,
+                    relation,
+                )
+                if candidate is None:
+                    continue
+                if candidate.width_mhz > best_width:
+                    best_candidate = candidate
+                    best_width = candidate.width_mhz
+            return best_candidate
+
         if plan.dvrs_rx_window is None:
             return None
 
@@ -970,6 +958,35 @@ class DVRSCalculationEngine:
                 best_width = candidate.width_mhz
 
         return best_candidate
+
+    def _propose_dvrs_tx(
+        self,
+        proposed_rx: FrequencyRange,
+        plan: TechnicalPlan,
+        derived_pair_offset: float | None,
+    ) -> FrequencyRange | None:
+        return self._derive_tx_from_rx(proposed_rx, plan, derived_pair_offset)
+
+    def _preview_plan_rx_range(self, plan: TechnicalPlan) -> FrequencyRange | None:
+        if plan.fixed_dvrs_rx_range is not None:
+            return FrequencyRange(plan.fixed_dvrs_rx_range[0], plan.fixed_dvrs_rx_range[1])
+        if plan.dvrs_rx_window is not None:
+            return FrequencyRange(plan.dvrs_rx_window[0], plan.dvrs_rx_window[1])
+        return None
+
+    def _preview_plan_tx_range(
+        self,
+        plan: TechnicalPlan,
+        preview_rx: FrequencyRange | None,
+        derived_pair_offset: float | None,
+    ) -> FrequencyRange | None:
+        if plan.fixed_dvrs_tx_range is not None:
+            return FrequencyRange(plan.fixed_dvrs_tx_range[0], plan.fixed_dvrs_tx_range[1])
+        if preview_rx is not None:
+            return self._derive_tx_from_rx(preview_rx, plan, derived_pair_offset)
+        if plan.dvrs_tx_window is not None:
+            return FrequencyRange(plan.dvrs_tx_window[0], plan.dvrs_tx_window[1])
+        return None
 
     def _solve_candidate_rx_range(
         self,
@@ -1025,6 +1042,41 @@ class DVRSCalculationEngine:
                 return None
 
         return FrequencyRange(candidate_low, candidate_high)
+
+    def _solve_feasible_rx_interval(
+        self,
+        system_summary: SystemSummary,
+        plan: TechnicalPlan,
+        base_rx_range: tuple[float, float],
+        tx_mobile_rx_relation: str | None,
+    ) -> FrequencyRange | None:
+        a_low = base_rx_range[0]
+        b_high = base_rx_range[1]
+        mobile_tx = system_summary.mobile_tx_range
+
+        if plan.placement == "below_mobile_tx":
+            b_high = min(
+                b_high,
+                self._round_freq(mobile_tx.low_mhz - plan.min_separation_from_mobile_tx_mhz),
+            )
+        elif plan.placement == "above_mobile_tx":
+            a_low = max(
+                a_low,
+                self._round_freq(mobile_tx.high_mhz + plan.min_separation_from_mobile_tx_mhz),
+            )
+
+        a_low, b_high = self._apply_tx_window_bounds(a_low, b_high, plan)
+        a_low, b_high = self._apply_mobile_rx_relation_bounds(
+            a_low,
+            b_high,
+            system_summary.mobile_rx_range,
+            plan,
+            tx_mobile_rx_relation,
+        )
+
+        if self._round_freq(b_high - a_low) < 0:
+            return None
+        return FrequencyRange(a_low, b_high)
 
     def _derive_tx_from_rx(
         self,
@@ -1111,8 +1163,8 @@ class DVRSCalculationEngine:
             notes.append(f"Best preliminary standard plan: {best_plan.display_name}.")
 
         return OrderingSummary(
-            system_tx_range=system_summary.system_tx_range,
-            system_rx_range=system_summary.system_rx_range,
+            system_tx_range=best_plan.system_tx_range if best_plan and best_plan.system_tx_range is not None else system_summary.system_tx_range,
+            system_rx_range=best_plan.system_rx_range if best_plan and best_plan.system_rx_range is not None else system_summary.system_rx_range,
             proposed_dvrs_tx_range=best_plan.proposed_dvrs_tx_range if best_plan else None,
             proposed_dvrs_rx_range=best_plan.proposed_dvrs_rx_range if best_plan else None,
             actual_dvrs_tx_range=actual_tx,
@@ -1221,6 +1273,42 @@ class DVRSCalculationEngine:
         proposed_rx: FrequencyRange,
         derived_pair_offset: float | None,
     ) -> RuleViolation | None:
+        if plan.fixed_dvrs_rx_range is not None and not self._range_within_window(proposed_rx, plan.fixed_dvrs_rx_range):
+            return RuleViolation(
+                code="DVRS_RX_OUTSIDE_FIXED_PLAN_RANGE",
+                message=(
+                    "DVRS RX range falls outside the plan's fixed ordering-guide RX range. "
+                    f"DVRS RX={self._format_range(proposed_rx)}; fixed RX range={self._format_window(plan.fixed_dvrs_rx_range)}."
+                ),
+                details={
+                    "plan_id": base_plan.id,
+                    "variant": variant_label,
+                    "dvrs_rx_range": {
+                        "low_mhz": proposed_rx.low_mhz,
+                        "high_mhz": proposed_rx.high_mhz,
+                    },
+                    "fixed_dvrs_rx_range": self._window_details(plan.fixed_dvrs_rx_range),
+                },
+            )
+
+        if plan.fixed_dvrs_tx_range is not None and not self._range_within_window(proposed_tx, plan.fixed_dvrs_tx_range):
+            return RuleViolation(
+                code="DVRS_TX_OUTSIDE_FIXED_PLAN_RANGE",
+                message=(
+                    "DVRS TX range falls outside the plan's fixed ordering-guide TX range. "
+                    f"DVRS TX={self._format_range(proposed_tx)}; fixed TX range={self._format_window(plan.fixed_dvrs_tx_range)}."
+                ),
+                details={
+                    "plan_id": base_plan.id,
+                    "variant": variant_label,
+                    "dvrs_tx_range": {
+                        "low_mhz": proposed_tx.low_mhz,
+                        "high_mhz": proposed_tx.high_mhz,
+                    },
+                    "fixed_dvrs_tx_range": self._window_details(plan.fixed_dvrs_tx_range),
+                },
+            )
+
         if not self._range_within_window(proposed_rx, plan.dvrs_rx_window):
             return RuleViolation(
                 code="DVRS_RX_OUTSIDE_ALLOWED_WINDOW",
@@ -1505,6 +1593,13 @@ class DVRSCalculationEngine:
         plan: TechnicalPlan,
         proposed_dvrs_passband: float,
     ) -> str:
+        if plan.fixed_dvrs_rx_range is not None:
+            return (
+                "No channel inside the plan's fixed ordering-guide DVRS RX range satisfies the required constraints. "
+                f"Input mobile TX={self._format_range(mobile_tx)}; "
+                f"fixed DVRS RX range={self._format_window(plan.fixed_dvrs_rx_range)}; "
+                f"required minimum separation from mobile TX={plan.min_separation_from_mobile_tx_mhz:.5f} MHz."
+            )
         return (
             "No contiguous DVRS RX window satisfies this plan's spacing and frequency constraints. "
             f"Input mobile TX={self._format_range(mobile_tx)}; "

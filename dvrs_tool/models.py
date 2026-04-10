@@ -16,9 +16,6 @@ class BandFamily(str, Enum):
     BAND_700 = "700 MHz"
     BAND_800 = "800 MHz"
     BAND_700_800 = "700 and 800"
-    VHF = "VHF"
-    UHF_380 = "UHF 380-430"
-    UHF_450 = "UHF 450-470"
 
 
 class PairingSource(str, Enum):
@@ -28,9 +25,6 @@ class PairingSource(str, Enum):
 
 
 class SystemBandHint(str, Enum):
-    VHF = "VHF"
-    UHF = "UHF"
-    BAND_700_ONLY = "700 only"
     BAND_800_ONLY = "800 only"
     BAND_700_AND_800 = "700 and 800"
 
@@ -95,6 +89,12 @@ class SystemSummary:
     system_rx_range: FrequencyRange
     system_tx_range: FrequencyRange | None
     pairing_source: PairingSource
+    mobile_tx_700_range: FrequencyRange | None = None
+    system_rx_700_range: FrequencyRange | None = None
+    system_tx_700_range: FrequencyRange | None = None
+    mobile_tx_800_range: FrequencyRange | None = None
+    system_rx_800_range: FrequencyRange | None = None
+    system_tx_800_range: FrequencyRange | None = None
     warnings: list[str] = field(default_factory=list)
 
 
@@ -137,6 +137,10 @@ class PlanResult:
     warnings: list[str] = field(default_factory=list)
     regulatory_reasons: list[str] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
+    mobile_tx_range: FrequencyRange | None = None
+    mobile_rx_range: FrequencyRange | None = None
+    system_tx_range: FrequencyRange | None = None
+    system_rx_range: FrequencyRange | None = None
 
 
 @dataclass

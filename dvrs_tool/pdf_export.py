@@ -95,11 +95,6 @@ def build_ordering_summary_pdf(response: CalculationResponse) -> bytes:
     y -= 14
     box(MARGIN, y - 96, PAGE_WIDTH - (MARGIN * 2), 104)
     text(298, y - 2, "700/800 MHz", bold=True)
-    text(388, y - 2, "VHF", bold=True)
-    text(456, y - 2, "UHF", bold=True)
-    rule(285, y - 8, 285, y - 96)
-    rule(375, y - 8, 375, y - 96)
-    rule(445, y - 8, 445, y - 96)
     band_column = _band_column(system.detected_band.value)
     table_rows = [
         ("Band enabled in MSU?", "Yes"),
@@ -167,11 +162,7 @@ def _range_edge(freq_range: FrequencyRange | None, edge: str) -> str:
 
 
 def _band_column(band: str) -> int:
-    if "700" in band or "800" in band:
-        return 318
-    if "VHF" in band:
-        return 394
-    return 466
+    return 318
 
 
 def _escape_pdf_text(value: object) -> str:
