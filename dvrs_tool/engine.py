@@ -368,22 +368,25 @@ class DVRSCalculationEngine:
             return system_summary
 
         if system_band != BandFamily.BAND_700_800 or plan.band_family not in {BandFamily.BAND_700, BandFamily.BAND_800}:
-            return self._build_system_summary(request, plan.band_family if system_band == BandFamily.BAND_700_800 else system_band)
+            return self._build_system_summary(
+                request,
+                plan.band_family if system_band == BandFamily.BAND_700_800 else system_band,
+            )
 
         if plan.band_family == BandFamily.BAND_700:
             plan_request = replace(
                 request,
-                mobile_tx_low_mhz=request.mobile_tx_800_low_mhz,
-                mobile_tx_high_mhz=request.mobile_tx_800_high_mhz,
+                mobile_tx_low_mhz=request.mobile_tx_700_low_mhz,
+                mobile_tx_high_mhz=request.mobile_tx_700_high_mhz,
             )
-            return self._build_system_summary(plan_request, BandFamily.BAND_800)
+            return self._build_system_summary(plan_request, BandFamily.BAND_700)
 
         plan_request = replace(
             request,
-            mobile_tx_low_mhz=request.mobile_tx_700_low_mhz,
-            mobile_tx_high_mhz=request.mobile_tx_700_high_mhz,
+            mobile_tx_low_mhz=request.mobile_tx_800_low_mhz,
+            mobile_tx_high_mhz=request.mobile_tx_800_high_mhz,
         )
-        return self._build_system_summary(plan_request, BandFamily.BAND_700)
+        return self._build_system_summary(plan_request, BandFamily.BAND_800)
 
     def _request_with_plan_specific_pairing(
         self,

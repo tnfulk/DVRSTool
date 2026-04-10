@@ -30,10 +30,13 @@ Technical validation and regulatory validation must be separate modules so rules
 6. Ordering-guide fixed ranges first.
 When the Futurecom ordering guide lists fixed DVRS TX/RX ranges for a standard plan, those published ranges control the plan definition. The app should recommend the feasible DVRS sub-range inside the published plan range that satisfies the plan rules. Technical validity for that plan means at least one paired DVRS channel inside the published fixed range can satisfy the plan rules.
 
-6. Conservative classification.
+7. Return the surviving compliant sub-range.
+For every plan, whether it uses a fixed ordering-guide range or only a broader allowed window, the engine must search for the remaining paired DVRS sub-range that still satisfies that plan's spacing, window, and pairing rules. If the nominal DVRS window is close to, partially overlaps, or would otherwise conflict with the system frequencies, the app must shrink the recommendation to the surviving compliant sub-range instead of rejecting the plan solely because the full nominal range would not fit. Reject the plan only when no compliant paired sub-range remains.
+
+8. Conservative classification.
 When the app cannot determine licensability with high confidence, it must say "coordination required" rather than "valid."
 
-7. Ordering workflow alignment.
+9. Ordering workflow alignment.
 The final output must look usable by radio technicians and procurement staff, not just developers.
 
 ### 1.3 Scope
@@ -47,6 +50,7 @@ In scope:
 - computed system TX/RX summary
 - proposed DVRS TX/RX ranges for each standard plan
   For fixed-range plans, these should be the recommended feasible sub-range inside the ordering-guide plan range, not a range that overlaps the system frequencies in violation of the plan spacing rules.
+  For all plans, if only part of the nominal DVRS range remains spacing-compliant, return that surviving compliant sub-range rather than failing the plan.
 - final-entry fields for actual licensed DVRS frequencies
 - plan-by-plan feasibility and regulatory status
 
@@ -126,7 +130,7 @@ Deterministic defaults:
 
 - `700 MHz`: system TX = mobile TX - 30 MHz
 - `800 MHz`: system TX = mobile TX + 45 MHz
-- `700 and 800 mixed systems`: plan evaluation must use the band-specific mobile TX range attached to each candidate plan
+- `700 and 800 mixed systems`: plan evaluation must use the band-specific mobile TX range attached to each candidate plan, and any returned DVRS recommendation must be computed from that same candidate plan's band-specific system ranges
 
 ### 2.5 Technical Plan Engine
 
@@ -160,9 +164,10 @@ For each plan, evaluate:
 2. Does the mobile TX/RX block fit the plan's allowed windows?
 3. If the ordering guide provides fixed DVRS TX/RX ranges for that plan, use those fixed ranges as the plan boundary and compute the recommended feasible DVRS sub-range inside that published plan range.
 4. For fixed-range plans, determine whether at least one paired DVRS channel inside the published fixed range satisfies the spacing, window, and pairing rules.
-5. The proposed DVRS TX/RX ranges returned to the user must themselves satisfy the selected plan's required separations.
-6. If a plan does not define a fixed published DVRS range, derive a candidate within the allowed windows and then apply spacing validation.
-7. Is required channel spacing or duplex split respected?
+5. For non-fixed plans, search the allowed windows for the surviving paired DVRS sub-range that satisfies the spacing, window, and pairing rules.
+6. The proposed DVRS TX/RX ranges returned to the user must themselves satisfy the selected plan's required separations, even if that means returning only a narrow slice of the nominal plan range.
+7. Near-adjacency or partial overlap between the nominal DVRS range and the system range is not by itself a reason to fail a plan; fail only if no compliant paired DVRS sub-range remains after applying the plan rules.
+8. Is required channel spacing or duplex split respected?
 
 Return:
 
@@ -338,6 +343,7 @@ Deliverable:
 
 1. The app should prefer the more recent ordering guide logic when the older narrative document and newer ordering guide differ.
    When the ordering guide publishes fixed standard-plan DVRS ranges, those ranges define the allowed recommendation boundary, while the returned proposed DVRS ranges must be a spacing-compliant subset when overlap would otherwise occur.
+   The same subset-selection principle applies to non-fixed plans inside their broader allowed windows.
 2. The app should target typical state, provincial, county, municipal, and agency public-safety users, not federal-only licensing profiles, in v1.
 3. The app should classify uncertain licensability as `coordination required`.
 4. The app should preserve a data model flexible enough to add VHF and UHF planning later, even though v1 only evaluates 700 MHz and 800 MHz plans.
