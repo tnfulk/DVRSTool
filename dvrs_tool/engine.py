@@ -423,6 +423,7 @@ class DVRSCalculationEngine:
         variant_label: str,
         variant_plan: TechnicalPlan,
     ) -> PlanResult:
+        variant_plan = self._resolved_variant_plan(request, plan, variant_label, variant_plan)
         variant_system_summary = self._build_variant_system_summary(
             request,
             system_summary,
@@ -732,20 +733,20 @@ class DVRSCalculationEngine:
             ]
         if plan.id == "800-A1":
             return [
-                ("700-system-only", self._build_cross_band_variant(plan, BandFamily.BAND_700)),
                 ("800-system-only", plan),
+                ("700-system-only", self._build_cross_band_variant(plan, BandFamily.BAND_700)),
                 ("700-and-800-system", plan),
             ]
         if plan.id == "800-A2":
             return [
-                ("700-system-only", self._build_cross_band_variant(plan, BandFamily.BAND_700)),
                 ("800-system-only", plan),
+                ("700-system-only", self._build_cross_band_variant(plan, BandFamily.BAND_700)),
                 ("700-and-800-system", plan),
             ]
         if plan.id == "800-B":
             return [
-                ("700-system-only", self._build_cross_band_variant(plan, BandFamily.BAND_700)),
                 ("800-system-only", plan),
+                ("700-system-only", self._build_cross_band_variant(plan, BandFamily.BAND_700)),
                 ("700-and-800-system", plan),
             ]
         return [("native", plan)]
@@ -836,8 +837,11 @@ class DVRSCalculationEngine:
         request: CalculationRequest,
     ) -> bool:
         return any(
-            self._variant_request_model_matches(request, plan, variant_label)
-            and self._single_plan_matches_actual_dvrs(variant_plan, request)
+            self._variant_candidate_model_matches(request, plan, variant_label)
+            and self._single_plan_matches_actual_dvrs(
+                self._resolved_variant_plan(request, plan, variant_label, variant_plan),
+                request,
+            )
             for variant_label, variant_plan in self._plan_variants(plan)
         )
 
@@ -921,11 +925,10 @@ class DVRSCalculationEngine:
                 dvrs_tx_window=(851.0, 869.0),
                 pair_offset_mhz=45.0,
                 pair_direction="tx_above_rx",
-                max_dvrs_passband_mhz=1.0,
+                fixed_dvrs_rx_range=(806.0, 824.0),
+                fixed_dvrs_tx_range=(851.0, 869.0),
                 active_mobile_tx_window=None,
                 active_mobile_rx_window=None,
-                fixed_dvrs_tx_range=None,
-                fixed_dvrs_rx_range=None,
                 notes=list(plan.notes)
                 + [
                     "700/800 interoperability profile enabled: this plan may also place DVRS RX in 806-824 MHz and DVRS TX in 851-869 MHz using a 45 MHz TX-above-RX pairing."
@@ -938,11 +941,10 @@ class DVRSCalculationEngine:
                 dvrs_tx_window=(769.0, 775.0),
                 pair_offset_mhz=30.0,
                 pair_direction="tx_below_rx",
-                max_dvrs_passband_mhz=1.0,
+                fixed_dvrs_rx_range=(799.0, 805.0),
+                fixed_dvrs_tx_range=(769.0, 775.0),
                 active_mobile_tx_window=None,
                 active_mobile_rx_window=None,
-                fixed_dvrs_tx_range=None,
-                fixed_dvrs_rx_range=None,
                 notes=list(plan.notes)
                 + [
                     "700/800 interoperability profile enabled: this plan may also place DVRS RX in 799-805 MHz and DVRS TX in 769-775 MHz using a 30 MHz TX-below-RX pairing."
@@ -950,17 +952,49 @@ class DVRSCalculationEngine:
             )
         return None
 
+    def _resolved_variant_plan(
+        self,
+        request: CalculationRequest,
+        base_plan: TechnicalPlan,
+        variant_label: str,
+        variant_plan: TechnicalPlan,
+    ) -> TechnicalPlan:
+        interop_variant = self._build_interop_variant(base_plan)
+        if interop_variant is None:
+            return variant_plan
+
+        is_cross_band_variant = (
+            (base_plan.band_family == BandFamily.BAND_700 and variant_label == "800-system-only")
+            or (base_plan.band_family == BandFamily.BAND_800 and variant_label == "700-system-only")
+        )
+        if not is_cross_band_variant:
+            return variant_plan
+
+        if request.system_band_hint == SystemBandHint.BAND_800_ONLY and base_plan.band_family == BandFamily.BAND_700:
+            return interop_variant
+
+        if request.system_band_hint == SystemBandHint.BAND_700_ONLY and base_plan.band_family == BandFamily.BAND_800:
+            return interop_variant
+
+        if request.actual_dvrs_tx_mhz is not None or request.actual_dvrs_rx_mhz is not None:
+            return interop_variant
+
+        return variant_plan
+
     def _select_best_plan_result(
         self,
         request: CalculationRequest,
         plan: TechnicalPlan,
         candidate_results: list[PlanResult],
     ) -> PlanResult:
+        variant_pairs = list(zip(candidate_results, self._plan_variants(plan)))
         matching_actual_results = [
             result
-            for result, (variant_label, variant_plan) in zip(candidate_results, self._plan_variants(plan))
-            if self._variant_request_model_matches(request, plan, variant_label)
-            and self._variant_matches_actual_licensed(request, variant_plan)
+            for result, (variant_label, variant_plan) in variant_pairs
+            if self._variant_matches_actual_licensed(
+                request,
+                self._resolved_variant_plan(request, plan, variant_label, variant_plan),
+            )
         ]
         valid_matching = [
             result for result in matching_actual_results if result.technical_status == TechnicalStatus.VALID
@@ -968,14 +1002,24 @@ class DVRSCalculationEngine:
         if valid_matching:
             return valid_matching[0]
 
+        if matching_actual_results:
+            return matching_actual_results[0]
+
         valid_results = [
             result for result in candidate_results if result.technical_status == TechnicalStatus.VALID
         ]
         if valid_results:
             return valid_results[0]
 
-        if matching_actual_results:
-            return matching_actual_results[0]
+        preferred_invalid_results = [
+            result
+            for result, (variant_label, _) in variant_pairs
+            if self._variant_candidate_model_matches(request, plan, variant_label)
+            and not any(violation.code == "SYSTEM_MODEL_MISMATCH" for violation in result.rule_violations)
+        ]
+        if preferred_invalid_results:
+            return preferred_invalid_results[0]
+
         non_mismatch_results = [
             result
             for result in candidate_results
@@ -990,12 +1034,7 @@ class DVRSCalculationEngine:
         request: CalculationRequest,
         plan: TechnicalPlan,
     ) -> bool:
-        actual_tx = self._frequency_point_range(request.actual_dvrs_tx_mhz)
-        actual_rx = self._frequency_point_range(request.actual_dvrs_rx_mhz)
-
-        tx_matches = actual_tx is None or self._range_within_window(actual_tx, plan.dvrs_tx_window)
-        rx_matches = actual_rx is None or self._range_within_window(actual_rx, plan.dvrs_rx_window)
-        return tx_matches and rx_matches
+        return self._single_plan_matches_actual_dvrs(plan, request)
 
     def _build_variant_system_summary(
         self,
@@ -1005,6 +1044,7 @@ class DVRSCalculationEngine:
         variant_label: str,
         variant_plan: TechnicalPlan,
     ) -> SystemSummary | None:
+        variant_plan = self._resolved_variant_plan(request, base_plan, variant_label, variant_plan)
         if variant_label == "native":
             return default_summary
 
@@ -1039,6 +1079,35 @@ class DVRSCalculationEngine:
 
         if request.system_band_hint == SystemBandHint.BAND_700_AND_800:
             return False
+
+        if request.system_band_hint == SystemBandHint.BAND_700_ONLY:
+            return variant_label == "700-system-only"
+
+        if request.system_band_hint == SystemBandHint.BAND_800_ONLY:
+            return variant_label == "800-system-only"
+
+        return variant_label in {"700-system-only", "800-system-only"}
+
+    def _variant_candidate_model_matches(
+        self,
+        request: CalculationRequest,
+        base_plan: TechnicalPlan,
+        variant_label: str,
+    ) -> bool:
+        if base_plan.id not in {"700-B", "700-C", "800-A1", "800-A2", "800-B"}:
+            return True
+
+        if variant_label == "700-and-800-system":
+            return request.system_band_hint == SystemBandHint.BAND_700_AND_800
+
+        if request.system_band_hint == SystemBandHint.BAND_700_AND_800:
+            return False
+
+        if request.system_band_hint == SystemBandHint.BAND_700_ONLY:
+            return variant_label == "700-system-only"
+
+        if request.system_band_hint == SystemBandHint.BAND_800_ONLY:
+            return variant_label == "800-system-only"
 
         if request.mobile_tx_low_mhz is None or request.mobile_tx_high_mhz is None:
             return False
