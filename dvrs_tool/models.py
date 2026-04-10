@@ -116,6 +116,10 @@ class TechnicalPlan:
     min_separation_from_mobile_rx_mhz: float | None = None
     active_mobile_tx_window: tuple[float, float] | None = None
     active_mobile_rx_window: tuple[float, float] | None = None
+    system_700_rx_range: tuple[float, float] | None = None
+    system_700_tx_range: tuple[float, float] | None = None
+    system_800_rx_range: tuple[float, float] | None = None
+    system_800_tx_range: tuple[float, float] | None = None
     fixed_dvrs_tx_range: tuple[float, float] | None = None
     fixed_dvrs_rx_range: tuple[float, float] | None = None
     requires_mobile_rx_range: bool = False
