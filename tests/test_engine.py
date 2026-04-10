@@ -116,9 +116,14 @@ class DVRSCalculationEngineTests(unittest.TestCase):
         self.assertEqual(plan_800_a1.dvrs_tx_window, (861.0, 869.0))
         self.assertEqual(plan_800_a1.pair_offset_mhz, 45.0)
         self.assertEqual(plan_800_a1.fixed_dvrs_tx_range, (861.0, 869.0))
+        self.assertEqual(plan_800_a1.min_separation_from_mobile_tx_mhz, 5.0)
+        self.assertEqual(plan_800_a1.min_separation_from_mobile_rx_mhz, 5.0)
         self.assertEqual(plan_800_a1.max_dvrs_passband_mhz, 3.0)
         self.assertEqual(plan_800_a2.dvrs_rx_window, (806.0, 814.0))
         self.assertEqual(plan_800_a2.active_mobile_tx_window, (811.0, 824.0))
+        self.assertEqual(plan_800_a2.min_separation_from_mobile_tx_mhz, 5.0)
+        self.assertEqual(plan_800_a2.min_separation_from_mobile_rx_mhz, 5.0)
+        self.assertEqual(plan_800_a2.max_dvrs_passband_mhz, 3.0)
         self.assertEqual(plan_800_b.dvrs_tx_window, (854.0, 869.0))
         self.assertEqual(plan_800_c.dvrs_rx_window, (806.0, 821.0))
         self.assertEqual(plan_800_c.dvrs_tx_window, (851.0, 866.0))
@@ -129,24 +134,24 @@ class DVRSCalculationEngineTests(unittest.TestCase):
                 country=Country.UNITED_STATES,
                 mobile_tx_low_mhz=806.0125,
                 mobile_tx_high_mhz=813.8375,
-                actual_dvrs_tx_mhz=863.2125,
-                actual_dvrs_rx_mhz=818.2125,
+                actual_dvrs_tx_mhz=863.8375,
+                actual_dvrs_rx_mhz=818.8375,
             )
         )
 
         plan_a1 = next(plan for plan in response.plan_results if plan.plan_id == "800-A1")
 
         self.assertEqual(plan_a1.technical_status, TechnicalStatus.VALID)
-        self.assertEqual(plan_a1.proposed_dvrs_tx_range.low_mhz, 863.2125)
-        self.assertEqual(plan_a1.proposed_dvrs_tx_range.high_mhz, 863.2125)
-        self.assertEqual(plan_a1.proposed_dvrs_rx_range.low_mhz, 818.2125)
-        self.assertEqual(plan_a1.proposed_dvrs_rx_range.high_mhz, 818.2125)
+        self.assertEqual(plan_a1.proposed_dvrs_tx_range.low_mhz, 863.8375)
+        self.assertEqual(plan_a1.proposed_dvrs_tx_range.high_mhz, 863.8375)
+        self.assertEqual(plan_a1.proposed_dvrs_rx_range.low_mhz, 818.8375)
+        self.assertEqual(plan_a1.proposed_dvrs_rx_range.high_mhz, 818.8375)
 
     def test_800_a1_recommended_ranges_stay_within_fixed_ordering_guide_values(self) -> None:
         request = CalculationRequest(
             country=Country.UNITED_STATES,
             mobile_tx_low_mhz=806.0,
-            mobile_tx_high_mhz=813.0,
+            mobile_tx_high_mhz=811.0,
         )
         system_summary = self.engine._build_system_summary(request, BandFamily.BAND_800)
         plan_a1_definition = next(plan for plan in TECHNICAL_PLANS[BandFamily.BAND_800] if plan.id == "800-A1")
@@ -246,18 +251,18 @@ class DVRSCalculationEngineTests(unittest.TestCase):
                 country=Country.UNITED_STATES,
                 mobile_tx_low_mhz=806.0125,
                 mobile_tx_high_mhz=813.8375,
-                actual_dvrs_tx_mhz=863.2125,
-                actual_dvrs_rx_mhz=818.2125,
+                actual_dvrs_tx_mhz=863.8375,
+                actual_dvrs_rx_mhz=818.8375,
             )
         )
 
         plan_a1 = next(plan for plan in response.plan_results if plan.plan_id == "800-A1")
 
         self.assertEqual(plan_a1.technical_status, TechnicalStatus.VALID)
-        self.assertEqual(plan_a1.proposed_dvrs_tx_range.low_mhz, 863.2125)
-        self.assertEqual(plan_a1.proposed_dvrs_tx_range.high_mhz, 863.2125)
-        self.assertEqual(plan_a1.proposed_dvrs_rx_range.low_mhz, 818.2125)
-        self.assertEqual(plan_a1.proposed_dvrs_rx_range.high_mhz, 818.2125)
+        self.assertEqual(plan_a1.proposed_dvrs_tx_range.low_mhz, 863.8375)
+        self.assertEqual(plan_a1.proposed_dvrs_tx_range.high_mhz, 863.8375)
+        self.assertEqual(plan_a1.proposed_dvrs_rx_range.low_mhz, 818.8375)
+        self.assertEqual(plan_a1.proposed_dvrs_rx_range.high_mhz, 818.8375)
         self.assertFalse(
             any(
                 violation.code == "ACTUAL_DVRS_FREQUENCY_OUTSIDE_COMPUTED_RANGE"
