@@ -1,439 +1,376 @@
-# DVRS In-Band Planning Web App
+# DVRS In-Band Planning App Constitution and Current Specification
+
+Last reviewed against the repository implementation: `2026-04-12`
+
+This specification was refreshed after reviewing the repository documentation, engine, API, static web UI, desktop wrapper, and tests. It is intended to describe the current project state plus germane future roadmap items, not an aspirational architecture that the repo does not yet implement.
 
 ## 1. Constitution
 
 ### 1.1 Purpose
-Build a web-based application that helps a public-safety radio planner evaluate Motorola Solutions DVR-LX 700 MHz and 800 MHz standard in-band configurations from minimal user input, then present:
+Provide a planning aid for Motorola Solutions DVR-LX standard in-band DVRS configurations that helps a radio planner:
 
-- technically valid DVR-LX TX/RX ranges
-- configurations that are not technically feasible
-- configurations that may be technically feasible but not realistically licensable in the selected country
-- a quote/order-style summary that mirrors the intent of the supplemental ordering form
+- enter the system frequencies the customer already has
+- evaluate standard 700 MHz and 800 MHz DVRS plans against those system frequencies
+- see which plans are technically valid, technically invalid, or technically plausible but coordination-dependent
+- produce an ordering-summary style output suitable for technician and procurement review
 
 ### 1.2 Product Principles
 
 1. Accuracy before convenience.
-The app must never imply that a technically valid frequency plan is automatically licensable.
+   The tool must never imply that technical fit equals licensing approval.
 
 2. Explainability over black-box output.
-Every result must show why a plan passed or failed: band window, spacing rule, passband rule, pairing rule, or regulatory policy rule.
+   Every invalid result must include rule-based failure reasons, and valid results should still preserve regulatory notes and warnings.
 
 3. Regulatory humility.
-The app is a planning aid, not legal advice and not a replacement for FCC/ISED coordination, APCO/IMS A, or Motorola Solutions review.
+   The product is a planning aid only. It is not a replacement for FCC, ISED, APCO/IMS A, border-area review, or Motorola Solutions review.
 
 4. Vendor-faithful logic.
-Technical plan evaluation must follow the Motorola Solutions ordering guide and in-band-operation guidance first, then layer country-specific regulatory checks on top.
+   Standard-plan behavior should follow the Motorola Solutions ordering guide and in-band operation references before any country-level overlay is applied.
 
-5. Modular rules engine.
-Technical validation and regulatory validation must be separate modules so rules can evolve independently.
+5. Data-driven plan rules.
+   Standard plans must be encoded as plan data, not hidden in UI-only logic.
 
-6. Ordering-guide fixed ranges first.
-When the Motorola Solutions ordering guide lists fixed DVRS TX/RX ranges for a standard plan, those published ranges control the plan definition. The app should recommend the feasible DVRS sub-range inside the published plan range that satisfies the plan rules. Technical validity for that plan means at least one paired DVRS channel inside the published fixed range can satisfy the plan rules.
+6. Fixed ranges define the recommendation boundary.
+   When the ordering guide publishes a fixed DVRS TX/RX range for a standard plan, that fixed range is the allowed recommendation boundary for that plan.
 
 7. Return the surviving compliant sub-range.
-For every plan, whether it uses a fixed ordering-guide range or only a broader allowed window, the engine must search for the remaining paired DVRS sub-range that still satisfies that plan's spacing, window, and pairing rules. If the nominal DVRS window is close to, partially overlaps, or would otherwise conflict with the system frequencies, the app must shrink the recommendation to the surviving compliant sub-range instead of rejecting the plan solely because the full nominal range would not fit. Reject the plan only when no compliant paired sub-range remains.
+   A plan should not fail merely because the full nominal DVRS range overlaps or crowds the system frequencies. The engine must search for the surviving paired DVRS sub-range that still satisfies the spacing, window, and pairing rules, and fail only when no compliant sub-range remains.
 
-8. Conservative classification.
-When the app cannot determine licensability with high confidence, it must say "coordination required" rather than "valid."
+8. Conservative regulatory classification.
+   When assignability is uncertain, the correct result is `COORDINATION_REQUIRED`, not a positive licensing claim.
 
-9. Ordering workflow alignment.
-The final output must look usable by radio technicians and procurement staff, not just developers.
+9. Ordering-workflow alignment.
+   Results must be usable by field, sales, and procurement stakeholders, not only by developers.
 
-### 1.3 Scope
-In scope:
+10. Current implementation honesty.
+    This document must reflect the shipped Python/FastAPI plus static UI architecture until the codebase actually changes.
+
+### 1.3 Current In-Scope Behavior
 
 - Motorola Solutions DVR-LX standard 700 MHz and 800 MHz in-band configurations
-- country toggle for `United States` and `Canada`
-- user input of the system frequency ranges actually available to the customer
-- explicit system-frequency configuration selection: `700 only`, `800 only`, or `700 and 800`
-- inferred 700 MHz / 800 MHz system-band detection where possible for single-band entries
-- mixed 700 MHz and 800 MHz system evaluation
-- computed system TX/RX summary
-- proposed DVRS TX/RX ranges for each standard plan
-  For fixed-range plans, these should be the recommended feasible sub-range inside the ordering-guide plan range, not a range that overlaps the system frequencies in violation of the plan spacing rules.
-  For all plans, if only part of the nominal DVRS range remains spacing-compliant, return that surviving compliant sub-range rather than failing the plan.
-- final-entry fields for actual licensed DVRS frequencies
-- plan-by-plan feasibility and regulatory status
-
-Out of scope for v1:
-
-- VHF technical plan support
-- UHF technical plan support
-- direct FCC ULS or ISED license lookups
-- automatic frequency coordination
-- custom Motorola Solutions filtering plans
-- cross-band configuration recommendation as the main output
-- final legal certification that a channel is assignable
-
-### 1.4 Output States
-Each configuration must end in one of these states:
-
-- `Technically valid + regulatorily plausible`
-- `Technically valid + coordination required`
-- `Technically invalid`
-- `Technically valid but outside likely public-safety band plan`
-
-## 2. Specification
-
-### 2.1 Source Constraints Taken From the Attached PDFs
-
-The app must encode the following Motorola Solutions guidance:
-
-- Only standard frequency plans are standard offerings; anything else is custom.
-- In-band filters are mechanically tuned and cannot be re-tuned in the field.
-- In-band MSU transmit power must not exceed 50 W in DVRS-enabled modes.
-- 700/800 in-band plans use a maximum DVR-LX passband of 1 MHz in the 2019 guidance, while the newer ordering guide expands certain 800 MHz plan windows; the rules engine should version the plan definitions explicitly and default to the latest ordering guide used by the project.
-- The supplemental-ordering-form layout is the right model for the final summary panel.
-
-### 2.2 User Inputs
-
-Required inputs:
-
-- `Country`: `United States` or `Canada`
-- `System frequency configuration`
+- country selection for `United States` and `Canada`
+- explicit system-frequency configuration selection:
   - `700 only`
   - `800 only`
   - `700 and 800`
-- For `700 only`
-  - `700 MHz system frequency low (MHz)`
-  - `700 MHz system frequency high (MHz)`
-- For `800 only`
-  - `800 MHz system frequency low (MHz)`
-  - `800 MHz system frequency high (MHz)`
-- For `700 and 800`
-  - `700 MHz system frequency low/high (MHz)`
-  - `800 MHz system frequency low/high (MHz)`
+- input of system frequencies using the current UI terminology `Mobile TX Frequency`
+- inferred single-band detection when no mixed-band mode is selected
+- mixed 700 MHz and 800 MHz evaluation using separate 700-side and 800-side ranges
+- deterministic system pairing:
+  - 700 system pair = entered system RX minus 30 MHz
+  - 800 system pair = entered system RX plus 45 MHz
+- parent-plan evaluation with internal submodel selection where required
+- plan-by-plan technical status, regulatory status, rule violations, warnings, and notes
+- optional exact `DVRS TX` and `DVRS RX` entries that can further constrain plan validity
+- ordering-summary output and backend-generated PDF export
+- browser-based delivery and a Windows desktop wrapper around the same web UI
 
-Derived inputs:
+### 1.4 Out of Scope
 
-- detected system-band family
-- detected entered system passband
-- paired system TX range, where the offset is deterministic for 700 MHz and 800 MHz system models
+- active VHF technical plan support
+- active UHF technical plan support
+- direct FCC ULS or ISED license lookup
+- automatic coordination or final licensing approval
+- custom Motorola Solutions filter-plan synthesis
+- saved scenarios or persistent project storage
+- admin editing of rule tables from the UI
+- a native desktop UI distinct from the current embedded web app
 
-Terminology rule:
+### 1.5 Output Model
+The current product exposes technical and regulatory status separately rather than collapsing everything into one combined label.
 
-- The system frequency inputs describe the frequencies already present in the customer system.
-- Standard plan names such as `700-A`, `700-B`, `700-C`, `800-A1`, `800-A2`, `800-B`, and `800-C` are named for the DVRS band placement, not the system band.
-- Because of that, a `700` plan may be evaluated against an `800 only` system model, and an `800` plan may be evaluated against a `700 only` system model, when the standard plan definition allows it.
+Technical status:
 
-Conditional inputs:
+- `TECHNICALLY_VALID`
+- `TECHNICALLY_INVALID`
 
-- `Manual mobile receive override`
-Use only when the project later expands beyond deterministic 700 MHz and 800 MHz pairing rules.
-
-Optional inputs:
-
-- `Use latest ordering-guide ruleset` toggle, default `true`
-- `Agency notes`
-- `Actual licensed DVRS low/high TX`
-- `Actual licensed DVRS low/high RX`
-
-### 2.3 System-Frequency Configuration And Band Detection
-
-The UI should ask the user which system frequencies they have, not which plan family they want.
-
-The app should interpret the provided system-frequency inputs as follows:
-
-- `700 only`
-  - one entered range in `799-805 MHz`
-- `800 only`
-  - one entered range in `806-824 MHz`
-- `700 and 800`
-  - one entered `700 MHz` system range and one entered `800 MHz` system range
-
-For single-band entries, the app should infer the system band family from the entered system range:
-
-- `700 MHz`: 799-805 MHz system frequencies
-- `800 MHz`: 806-824 MHz system frequencies
-
-If the input falls outside the supported 700 MHz or 800 MHz windows, the app must stop and show an input error.
-
-### 2.4 System Frequency Computation
-
-The app must compute and display:
-
-- `System RX` = the entered system frequency range
-- `System TX` = paired system transmit range inferred from the applicable deterministic system model
-
-Deterministic defaults:
-
-- `700 MHz system`: system TX = entered system RX - 30 MHz
-- `800 MHz system`: system TX = entered system RX + 45 MHz
-- `700 and 800 mixed systems`: plan evaluation must use the band-specific system range attached to each candidate plan, and any returned DVRS recommendation must be computed from that same candidate plan's band-specific system ranges
-
-### 2.5 Technical Plan Engine
-
-Represent each standard in-band configuration as data, not hard-coded UI logic.
-
-Each plan definition should contain:
-
-- `id`
-- `bandFamily`
-- `displayName`
-- `mountCompatibility`
-- `dvrsTxWindow`
-- `dvrsRxWindow`
-- `requiredDvrsSpacing`
-- `requiredMsuSpacing`
-- `minSeparationRules`
-- `maxDvrsPassband`
-- `maxMsuPassband`
-- `fixedDvrsTxRange`
-- `fixedDvrsRxRange`
-- `notes`
-
-Planned standard in-band coverage for v1:
-
-- 700 MHz: Plans `A`, `B`, `C`
-- 800 MHz: Plans `A1`, `A2`, `B`, `C`
-
-Parent-plan evaluation model:
-
-- The UI must present only parent plans.
-- Some parent plans internally evaluate multiple system-frequency submodels.
-- A parent plan passes if any supported submodel passes.
-- The selected parent result returned to the UI must preserve the system ranges used by the winning submodel.
-
-Required system-model mappings:
-
-- For `800 only` system input, evaluate:
-  - `700-A`
-  - `700-B` using the `800 only` submodel
-  - `700-C` using the `800 only` submodel
-  - `800-C`
-- For `700 only` system input, evaluate:
-  - `700-B` using the `700 only` submodel
-  - `700-C` using the `700 only` submodel
-  - `800-A1` using the `700 only` submodel
-  - `800-A2` using the `700 only` submodel
-  - `800-B` using the `700 only` submodel
-- For `700 and 800` system input, evaluate:
-  - `700-B`
-  - `700-C`
-  - `800-A1`
-  - `800-A2`
-  - `800-B`
-
-For each plan, evaluate:
-
-1. Does the selected system-frequency model map to a supported submodel for the parent plan?
-2. Does the relevant system RX/TX block fit the plan's allowed windows?
-3. If the ordering guide provides fixed DVRS TX/RX ranges for that plan, use those fixed ranges as the plan boundary and compute the recommended feasible DVRS sub-range inside that published plan range.
-4. For fixed-range plans, determine whether at least one paired DVRS channel inside the published fixed range satisfies the spacing, window, and pairing rules.
-5. For non-fixed plans, search the allowed windows for the surviving paired DVRS sub-range that satisfies the spacing, window, and pairing rules.
-6. The proposed DVRS TX/RX ranges returned to the user must themselves satisfy the selected plan's required separations, even if that means returning only a narrow slice of the nominal plan range.
-7. Near-adjacency or partial overlap between the nominal DVRS range and the system range is not by itself a reason to fail a plan; fail only if no compliant paired DVRS sub-range remains after applying the plan rules.
-8. Is required channel spacing or duplex split respected?
-
-Return:
-
-- boolean pass/fail
-- list of failures
-- resulting proposed DVRS TX range
-- resulting proposed DVRS RX range
-
-### 2.6 Regulatory Rules Engine
-
-The regulatory engine must be a second pass applied after technical evaluation.
-
-Each result gets:
-
-- `regulatoryStatus`
-- `confidence`
-- `reasonCodes`
-- `humanSummary`
-
-Recommended statuses:
+Regulatory status:
 
 - `LIKELY_LICENSABLE`
 - `COORDINATION_REQUIRED`
 - `LIKELY_NOT_LICENSABLE`
+- `NOT_EVALUATED`
 
-#### United States rules for v1
+## 2. Current Specification
 
-Use a conservative model:
+### 2.1 Source Constraints
+The current app encodes these working assumptions from the bundled references and later approved project decisions:
 
-- `700 MHz`: treat 769-775 / 799-805 as public-safety-capable.
-- `800 MHz`: treat public-safety use as plausible within the 800 public-safety pool and interoperability structure, but note border-area and channel-category constraints.
+- Only standard plans are treated as standard offerings; anything else requires vendor review.
+- In-band filters are mechanically tuned and are not treated as field-retunable.
+- The ordering guide is the source of truth for fixed standard-plan ranges.
+- Later approved scope decisions refine how those ranges are evaluated, especially the requirement to return the remaining compliant DVRS slice instead of failing early.
+- The supplemental ordering form is the model for the ordering summary and PDF export, but the PDF export is a generated approximation rather than a filled vendor template.
 
-#### Canada rules for v1
+### 2.2 User Inputs
 
-Use a similarly conservative model:
+Required inputs in the current UI/API:
 
-- `768-776 / 798-806 MHz`: treat as public-safety-capable.
-- `821-824 / 866-869 MHz`: treat as specifically public-safety-capable in 800 MHz.
-- `806-821 / 851-866 MHz`: treat as broader land-mobile spectrum that may be used depending on sub-allocation and coordination; mark coordination-required unless a later ruleset refines it by channel block.
+- `country`
+- `system_band_hint`
+- single-band mode:
+  - `mobile_tx_low_mhz`
+  - `mobile_tx_high_mhz`
+- mixed mode:
+  - `mobile_tx_700_low_mhz`
+  - `mobile_tx_700_high_mhz`
+  - `mobile_tx_800_low_mhz`
+  - `mobile_tx_800_high_mhz`
 
-### 2.7 Result Presentation
+Optional planning inputs:
 
-The app should render three panes:
+- `actual_dvrs_tx_mhz`
+- `actual_dvrs_rx_mhz`
 
-1. `Input + System Summary`
-- country
-- selected system-frequency configuration
-- detected system band
-- user-entered system frequency low/high, or both entered 700 and 800 system ranges
-- computed or assumed system TX low/high
-- warnings about assumptions
+Optional ordering metadata:
 
-2. `Standard Configuration Matrix`
-- one card or row per standard in-band plan
-- technical status
-- regulatory status
-- valid proposed DVRS TX range
-- valid proposed DVRS RX range
-- concise reason text
+- `agency_name`
+- `quote_date`
+- `mobile_radio_type`
+- `control_head_type`
+- `msu_antenna_type`
+- `agency_notes`
 
-3. `Ordering Form Summary`
-- system TX/RX values
-- proposed DVRS TX/RX range
-- blank editable fields for actual licensed DVRS TX/RX
-- notes area
-- export-friendly layout
+Compatibility input retained in the API:
 
-### 2.8 UX Requirements
+- `mobile_rx_low_mhz`
+- `mobile_rx_high_mhz`
 
-- Do not hide rejected plans; show all standard plans for the detected band family.
-- Use color plus text labels; color alone is not enough.
-- Every failed plan must expose the exact failing rule.
-- Every yellow/red regulatory status must show a disclaimer and source basis.
-- Show the Motorola Solutions note that custom plans require vendor review.
+Current status of that compatibility input:
 
-### 2.9 Non-Functional Requirements
+- The API model still accepts manual mobile RX override values.
+- The current browser UI does not expose those fields.
+- For the present 700/800 workflow, deterministic pairing is the default and expected path.
 
-- Rules must be data-driven JSON or TypeScript objects.
-- Regulatory rules must be versioned separately from technical plan rules.
-- Every calculation should be unit-tested.
-- App should support future addition of `VHF`, `UHF`, `federal`, `rail`, or `utility` profiles without rewriting the core engine.
+Current status of `use_latest_ordering_ruleset`:
 
-## 3. Implementation Plan
+- The checkbox exists in the UI and request model.
+- The repository currently encodes only one active ruleset path in the engine.
+- The flag should therefore be treated as a reserved forward-compatibility toggle, not as evidence of multiple live rule engines.
 
-### Phase 1. Foundations
+### 2.3 Input Semantics and Terminology
+The planner asks for the frequencies already present in the customer system, not the desired DVRS plan family.
 
-- Create a single-page web app using a modular front end such as React + TypeScript.
-- Define domain models for `BandFamily`, `TechnicalPlan`, `RegulatoryPolicy`, `EvaluationResult`, and `OrderSummary`.
-- Build a source-controlled plan-definition dataset from the Motorola Solutions ordering guide.
+Important terminology rule:
 
-Deliverable:
+- Standard plan names such as `700-A`, `700-B`, `700-C`, `800-A1`, `800-A2`, `800-B`, and `800-C` refer to DVRS plan families.
+- They do not necessarily match the system band entered by the user.
+- Because of that, a `700` parent plan may evaluate successfully against an `800 only` system model, and an `800` parent plan may evaluate successfully against a `700 only` system model, when the encoded plan data allows it.
 
-- static plan data and validation interfaces
+### 2.4 Supported Band Detection and Range Windows
 
-### Phase 2. Technical Rules Engine
+- 700-side system input is supported when the entered system-frequency range fits `799.0-805.0 MHz`
+- 800-side system input is supported when the entered system-frequency range fits `806.0-824.0 MHz`
+- any other single-band range is rejected as unsupported or ambiguous
+- mixed mode requires separate 700-side and 800-side inputs and evaluates each candidate plan against the band-specific system range relevant to that plan
 
-- Implement band detection.
-- Implement system TX/RX computation.
-- Implement plan-by-plan technical validation.
-- Add unit tests for each supported 700/800 standard plan family.
+### 2.5 System Pairing and Summary Rules
+The current engine and UI treat the entered system frequencies as system RX values and derive paired system TX values from them.
 
-Deliverable:
+Deterministic defaults:
 
-- deterministic technical evaluator with test coverage
+- `700 only`: system TX = entered range minus 30 MHz
+- `800 only`: system TX = entered range plus 45 MHz
+- `700 and 800`: both deterministic pairings are retained in the mixed-band summary, and each candidate plan uses the matching side of the system during evaluation
 
-### Phase 3. Regulatory Policy Layer
+### 2.6 Technical Plan Coverage
+Current encoded standard plans:
 
-- Encode U.S. and Canada policy ranges as a separate rules module.
-- Add confidence-based results and disclaimers.
-- Add source metadata so each rule can point to the supporting reference.
+- 700 MHz: `700-A`, `700-B`, `700-C`
+- 800 MHz: `800-A1`, `800-A2`, `800-B`, `800-C`
 
-Deliverable:
+The plan dataset is currently implemented in `dvrs_tool/plan_data.py` and protected by `dvrs_tool/plan_table_guard.py` so edits require explicit confirmation.
 
-- country-aware regulatory classifier
+### 2.7 Parent-Plan and Submodel Evaluation
+The UI presents parent plans only. The engine may internally evaluate one or more compatible interpretations for a parent plan and select the best surviving result.
 
-### Phase 4. User Interface
+Current expected candidate sets:
 
-- Build the input form.
-- Build the configuration matrix.
-- Build the ordering-form-style summary panel.
-- Add assumption and warning banners.
+- `700 only`: `700-A`, `700-B`, `700-C`, `800-A1`, `800-A2`, `800-B`
+- `800 only`: `700-A`, `700-B`, `700-C`, `800-A1`, `800-A2`, `800-B`, `800-C`
+- `700 and 800`: `700-B`, `700-C`, `800-A1`, `800-A2`, `800-B`
 
-Deliverable:
+Important current behavior:
 
-- end-to-end interactive planner
+- the winning parent-plan result preserves the system ranges used by the winning submodel
+- mixed-band plan evaluation uses the candidate plan's own band-specific system ranges
+- actual supplied DVRS frequencies can narrow the returned candidate set in some workflows
 
-### Phase 5. Validation and Expert Review
+### 2.8 Technical Evaluation Rules
+For each candidate plan, the current engine is expected to evaluate at least the following concerns:
 
-- test sample cases from the Motorola Solutions in-band-operation guide
-- compare results against at least a few known real-world band scenarios
-- review edge cases with a radio technician or coordinator
+1. Whether the selected system model is supported by the plan or plan variant.
+2. Whether the active mobile TX and mobile RX windows are satisfied.
+3. Whether the DVRS proposal can remain within the plan's fixed range, if one exists.
+4. Whether a surviving contiguous DVRS RX range exists after applying spacing and window rules.
+5. Whether the paired DVRS TX range derived from that solution stays valid for the plan.
+6. Whether the required duplex or simplex pairing relationship is preserved.
+7. Whether exact user-supplied DVRS TX/RX values fit the plan rules when provided.
 
-Deliverable:
+Required recommendation behavior:
 
-- validated v1 release candidate
+- For fixed-range plans, search inside the published fixed range and return the feasible compliant sub-range.
+- For allowed-window plans, search inside the plan window and return the surviving compliant sub-range.
+- Do not fail a plan simply because the full nominal range does not fit; fail only when no compliant paired sub-range remains.
 
-### Phase 6. Nice-to-Have Enhancements
+Current actual-DVRS behavior:
 
-- PDF export of the ordering summary
-- saved scenarios
-- admin-editable regulatory policy tables
-- optional direct license import from FCC ULS or a local CSV
-- explicit profile selection such as `state/local public safety`, `federal`, or `other government`
+- `actual_dvrs_tx_mhz` and `actual_dvrs_rx_mhz` are treated as exact frequencies, not as mandatory low/high ranges.
+- Those exact values can make some plans valid and others invalid.
+- The engine may add advisory notes when the exact point is acceptable but a widened plus/minus 0.5 MHz comfort window would reduce spacing margin.
 
-## 4. Recommended Architecture
+### 2.9 Regulatory Evaluation Rules
+The regulatory classifier is a second-stage overlay on top of technical evaluation.
 
-### Front End
+Current result fields:
 
-- React + TypeScript
-- component groups:
-  - `InputForm`
-  - `SystemSummary`
-  - `PlanResultsTable`
-  - `OrderFormPreview`
-  - `RuleExplanationDrawer`
+- `regulatory_status`
+- `confidence`
+- `regulatory_reasons`
 
-### Core Modules
+Current conservative rules encoded in `dvrs_tool/plan_data.py`:
 
-- `bandDetection.ts`
-- `pairingInference.ts`
-- `technicalPlans.ts`
-- `technicalEvaluator.ts`
-- `regulatoryPolicies.ts`
-- `regulatoryEvaluator.ts`
-- `formatters.ts`
+- United States:
+  - 700 MHz DVRS proposals inside `769-775 / 799-805` are treated as likely licensable
+  - supported 700/800 interoperability layouts are usually classified as coordination required
+  - other 800 MHz outcomes remain coordination required unless a stronger negative condition is later encoded
+- Canada:
+  - `768-776 / 798-806` is treated as likely licensable for 700 MHz public-safety-capable use
+  - `821-824 / 866-869` is treated as likely licensable for the Canadian 800 MHz public-safety block
+  - broader 800 MHz outcomes default to coordination required
 
-### Test Modules
+### 2.10 Result Presentation
+The shipped web UI presents three main panels:
 
-- `technicalEvaluator.test.ts`
-- `regulatoryEvaluator.test.ts`
-- `fixtures/*.json`
+1. `System`
+   - detected band
+   - pairing source
+   - entered system frequencies
+   - derived system TX values
+   - mixed-band 700-side and 800-side summaries where applicable
+
+2. `Plans`
+   - one card per parent plan returned by the engine
+   - technical and regulatory badges
+   - proposed DVRS TX/RX for technically valid plans
+   - rule and warning text
+   - shared-axis frequency visualization for technically valid plans
+
+3. `Quote Draft`
+   - system TX/RX
+   - proposed DVRS TX/RX
+   - actual DVRS TX/RX, if provided
+   - optional ordering metadata
+   - summary notes
+   - PDF export action
+
+### 2.11 Delivery Architecture
+The current repository is not a React/TypeScript app and should not be documented as one.
+
+Current shipped architecture:
+
+- core engine: Python in `dvrs_tool/engine.py`
+- plan and regulatory data: Python in `dvrs_tool/plan_data.py`
+- API layer: FastAPI in `dvrs_tool/api.py`
+- web UI: static HTML/CSS/JavaScript in `dvrs_tool/static/`
+- CLI: `python -m dvrs_tool`
+- desktop wrapper: PySide6 WebEngine launcher in `dvrs_tool/desktop.py` with `run_desktop.py`
+- Windows packaging path: PyInstaller via `dvrs_desktop.spec` and `build_windows.ps1`
+
+### 2.12 Testing and Quality Expectations
+
+- plan-table edits must be intentional and accompanied by a guard-file update
+- engine, API, CLI, and PDF-export behavior should remain covered by unit tests
+- regressions around mixed-band evaluation, plan sub-ranges, exact DVRS frequencies, and validation messages should remain tested
+
+## 3. Implementation Status
+
+### 3.1 Implemented
+
+- Python calculation engine
+- FastAPI evaluation endpoint
+- static web planner UI
+- mixed 700/800 workflow
+- parent-plan evaluation with submodels
+- exact DVRS TX/RX validation
+- ordering summary panel
+- generated PDF export
+- CLI entrypoint
+- Windows desktop wrapper and packaging scaffold
+
+### 3.2 Partially Implemented or Reserved
+
+- `use_latest_ordering_ruleset` exists but does not yet switch between multiple active rulesets
+- manual mobile RX override exists in the API model but is not exposed in the browser UI
+- regulatory classification is intentionally conservative and still coarse compared with full licensing review
+
+### 3.3 Not Implemented
+
+- VHF planning
+- UHF planning
+- direct regulator or licensing-system integration
+- scenario persistence
+- template-filled vendor PDF output
+
+## 4. Current Architecture
+
+- core engine: `dvrs_tool/engine.py`
+- plan and regulatory data: `dvrs_tool/plan_data.py`
+- request and response models: `dvrs_tool/models.py`
+- API layer: `dvrs_tool/api.py`
+- PDF export: `dvrs_tool/pdf_export.py`
+- web UI: `dvrs_tool/static/index.html`, `styles.css`, `app.js`
+- CLI: `dvrs_tool/cli.py`
+- desktop runtime: `dvrs_tool/desktop.py` and `run_desktop.py`
+- packaging: `dvrs_desktop.spec` and `build_windows.ps1`
+- regression suite: `tests/test_engine.py` and `tests/test_plan_table_guard.py`
 
 ## 5. Important Assumptions
 
-1. The app should prefer the more recent ordering guide logic when the older narrative document and newer ordering guide differ.
-   When the ordering guide publishes fixed standard-plan DVRS ranges, those ranges define the allowed recommendation boundary, while the returned proposed DVRS ranges must be a spacing-compliant subset when overlap would otherwise occur.
-   The same subset-selection principle applies to non-fixed plans inside their broader allowed windows.
-2. The app should target typical state, provincial, county, municipal, and agency public-safety users, not federal-only licensing profiles, in v1.
-3. The app should classify uncertain licensability as `coordination required`.
-4. The app should preserve a data model flexible enough to add VHF and UHF planning later, even though v1 only evaluates 700 MHz and 800 MHz plans.
+1. When the ordering guide and older narrative material differ, the approved newer project interpretation should control, especially for fixed plan ranges and sub-range recommendation behavior.
+2. The current product targets standard public-safety planning workflows for U.S. and Canadian users, not federal-only or specialized rail, utility, or other profiles.
+3. `COORDINATION_REQUIRED` is the correct default whenever the project cannot justify a stronger licensing conclusion.
+4. Future scope additions should extend the current data-driven Python engine rather than forcing rule logic into the UI.
 
-## 7. Roadmap
+## 6. Germane Future Development Roadmap
 
-- Add VHF standard-plan support in a future release once the team is ready to reintroduce manual-pairing and narrow-passband workflows.
-- Add UHF standard-plan support in a future release once the team is ready to reintroduce the 380-430 MHz and 450-470 MHz technical and regulatory rulesets.
+The following roadmap items are germane to the current product direction and should remain documented even though they are not yet implemented:
 
-## 6. Research Notes and Source Basis
+- activate true multi-ruleset support if the `use_latest_ordering_ruleset` toggle is intended to become functional
+- refine regulatory classification only when authoritative channel-block or profile-specific rules are ready to encode and test
+- add scenario save/load support if planner reuse becomes a regular workflow need
+- consider admin-managed policy or plan tables only after the current guarded plan-table workflow is proven stable
+- decide whether to keep the current static web UI or migrate to a richer frontend framework if UI complexity materially increases
+- evaluate template-based PDF filling if the generated ordering-summary PDF is no longer sufficient
+- reintroduce VHF or UHF only as deliberate scoped projects with dedicated plan data, pairing logic, regulatory rules, and regression coverage
+- consider direct license-import integrations only after the core 700/800 planning workflow is stable and reviewable
 
-Attached documents used:
+## 7. Research Notes and Source Basis
+
+Primary bundled references:
 
 - `dvr-lx-ordering-guide-1 (1).pdf`
 - `Introduction to  In-Band Operation-v1_2019-06-19.pdf`
 - `supplemental-ordering-form-b2bf88f7.pdf`
 
-Online sources reviewed for regulatory framing:
+Repository evidence reviewed during this refresh:
 
-- Motorola Solutions DVR-LX ordering-guide mirror:
-  - https://manuals.plus/m/79994c2ed840d6ccd9827e13cfef138ce4c5b89f6275934723d79f50c8dc679b
-- FCC Public Safety Pool:
-  - https://www.law.cornell.edu/cfr/text/47/90.20
-- FCC 800 MHz public-safety pool in non-border areas:
-  - https://www.law.cornell.edu/cfr/text/47/90.617
-- FCC 700 MHz narrowband public-safety rules:
-  - https://www.law.cornell.edu/cfr/text/47/90.531
-- Canada SRSP-511 for 768-776 / 798-806 MHz:
-  - https://ised-isde.canada.ca/site/spectrum-management-telecommunications/en/node/844
-- Canada SRSP-502 for 806-824 / 851-869 MHz:
-  - https://ised-isde.canada.ca/site/spectrum-management-telecommunications/en/devices-and-equipment/standard-radio-system-plans/srsp-502-technical-requirements-land-mobile-and-fixed-radio-services-operating-bands-806-821851-866
+- `README.md`
+- `docs/dev-log.md`
+- `docs/dev-history/*.md`
+- `dvrs_tool/api.py`
+- `dvrs_tool/engine.py`
+- `dvrs_tool/models.py`
+- `dvrs_tool/plan_data.py`
+- `dvrs_tool/pdf_export.py`
+- `dvrs_tool/static/index.html`
+- `dvrs_tool/static/app.js`
+- `dvrs_desktop.spec`
+- `tests/test_engine.py`
+- `tests/test_plan_table_guard.py`
 
 Regulatory caution:
 
-- U.S. and Canadian public-safety eligibility is channel-specific, border-sensitive, and coordinator-dependent.
-- Because of that, the correct v1 behavior is classification and explanation, not automatic licensing approval.
+- U.S. and Canadian assignability remains channel-specific, border-sensitive, and coordinator-dependent.
+- The correct role of this product is technical and policy-informed screening, not automatic approval.

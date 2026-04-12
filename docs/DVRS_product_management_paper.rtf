@@ -1,0 +1,548 @@
+{\rtf1\ansi\deff0
+{\fonttbl{\f0 Calibri;}}
+\viewkind4\uc1\pard\f0\fs24
+\pard\sa180\qc\b\fs32 DVRS Tool: Product Development Paper\b0\fs24\par
+\pard\sa120\par
+\pard\sa160\sb120\b\fs26 Introduction\b0\fs24\par
+\pard\sa120\par
+\pard\sa120 For this project, I built a software tool to help evaluate Motorola Solutions DVR-LX standard in-band DVRS configurations. The practical problem was simple to state but messy to do by hand: given a customer's available system frequencies, determine which standard plans are technically feasible, which are likely to require coordination, and how to present the result in a form that is actually useful to someone doing planning or quoting work.\par
+\pard\sa120\par
+\pard\sa120 I chose this problem because it sits in a place where software can genuinely reduce friction. The source material exists, but it is scattered across vendor ordering guides, in-band operation notes, and ordering-form conventions. That means the work is repeatable enough to automate, but detailed enough that a careless tool would be dangerous. I was not trying to replace coordination, licensing review, or Motorola review. I was trying to make the earlier planning step faster, clearer, and less error-prone.\par
+\pard\sa120\par
+\pard\sa120 The final repo contains more than code. It includes a constitution and specification in `dvrs-web-app-design.md`, a running development log in `docs/dev-log.md`, raw chat-thread records in `docs/raw-threads`, and summarized engineering history in `docs/dev-history`. That documentation matters because this course project was explicitly about software product development, not just coding. In that sense, the most important result is not only that the tool works, but that the process is visible: how I framed the problem, narrowed scope, made tradeoffs, corrected wrong assumptions, and used an agent in a disciplined way.\par
+\pard\sa120\par
+\pard\sa160\sb120\b\fs26 Problem and Context\b0\fs24\par
+\pard\sa120\par
+\pard\sa120 The problem I solved was early-stage DVRS plan evaluation for public-safety radio systems. The intended users are the people between the customer and the final approved configuration: technicians, planners, procurement staff, and product or presales engineers. They need to answer questions like: given the system frequencies this customer already has, which standard DVRS plans are even worth considering, what DVRS TX/RX ranges remain feasible after applying the spacing rules, and does the result look plausible in the United States or Canada?\par
+\pard\sa120\par
+\pard\sa120 This matters because the manual alternative is slow and easy to get wrong. A planner has to interpret plan windows, pairing offsets, spacing rules, and regulatory context from PDFs and then convert that into a usable recommendation. In the repo history, this is exactly where complexity kept showing up: cross-band interpretation, fixed plan windows, mixed 700/800 behavior, and the difference between technical feasibility and regulatory confidence. Those are not impossible tasks, but they are the kind of tasks where a small mistake can send someone down the wrong path early.\par
+\pard\sa120\par
+\pard\sa120 The main alternatives were straightforward. One was to keep doing the work manually with the ordering guide and supplemental form. That preserves expert judgment, but it is inconsistent, hard to audit, and not very scalable. Another was a spreadsheet or a lightweight calculator. That would help with arithmetic, but it would still struggle to explain why a plan fails, handle mixed-band cases cleanly, or preserve the distinction between technically valid and regulatorily uncertain. A third alternative was to skip software entirely and rely on a Motorola presales engineer or coordinator from the start. That is still necessary at the end of the process, but it is too heavy to be the first step for every scenario.\par
+\pard\sa120\par
+\pard\sa120 My solution differs because it creates a planning layer in the middle. The DVRS tool does not pretend to be the final authority. Instead, it narrows the search space, shows the reasoning, returns the surviving compliant subrange when only part of a plan remains viable, and produces an ordering-form-style summary that fits the workflow the user is already in.\par
+\pard\sa120\par
+\pard\sa120 One of the most important product decisions was scope. Earlier iterations touched VHF and UHF, but I deliberately narrowed the active product to 700 MHz, 800 MHz, and mixed 700/800 systems. That decision is documented in `docs/dev-history/repo-maintenance-700-800-scope-and-git-identity-summary.md`. I think that was the right call. The assignment emphasized building something ambitious, but also stressed process and product judgment. For this project, the right move was not "support every band eventually mentioned in the source material." The right move was to build one coherent tool around the part of the problem I could define, test, and defend.\par
+\pard\sa120\par
+\pard\sa160\sb120\b\fs26 Product Development Process\b0\fs24\par
+\pard\sa120\par
+\pard\sa120 The clearest place where I applied the course concepts was at the very beginning: I wrote a constitution and a specification before pushing deeper into implementation. In `dvrs-web-app-design.md`, I defined the purpose of the tool, the user-facing scope, the output states, the major modules, and a set of product principles. Those principles were not filler. They acted like decision filters. The most important ones were accuracy before convenience, explainability over black-box output, regulatory humility, vendor-faithful logic, and modular separation between technical and regulatory validation.\par
+\pard\sa120\par
+\pard\sa120 That first step reflects the strategy and vision part of the course. I had to decide what kind of product this actually was. It was not a generic radio-planning app. It was not a compliance oracle. It was a planning aid for a narrow workflow, and the spec says that directly. That framing drove later choices. For example, I explicitly kept the tool conservative when licensing certainty was unclear. The product principle there was simple: if confidence is low, say "coordination required," not "valid." That was a product-management decision shaped by stakeholder risk, not just a coding detail.\par
+\pard\sa120\par
+\pard\sa120 The project also reflects the course emphasis on moving from needs to requirements to implementation. The need started vague: help someone figure out what DVRS plans are possible. I translated that into specific inputs, derived values, output states, and UI panes. The spec defines required fields, system-band configurations, how system TX/RX should be derived, how candidate plans should be selected, how fixed DVRS ranges should be handled, and how regulatory status should be classified. That decomposition became the architecture. The functional breakdown in the spec maps directly to the code organization in `dvrs_tool/models.py`, `dvrs_tool/plan_data.py`, `dvrs_tool/engine.py`, `dvrs_tool/api.py`, and the frontend.\par
+\pard\sa120\par
+\pard\sa120 Design tradeoffs came up constantly. The biggest one was accuracy versus usability. I wanted the tool to be useful enough to help someone move quickly, but not so "helpful" that it hid uncertainty. That tension shows up all over the repo. A good example is the shift in the engine toward spacing-first logic. In `docs/dev-history/dvrs-engine-api-spacing-rules-summary.md`, the engine moves through several interpretations of the ordering guide: first a looser modeled-window approach, then stricter guide-window alignment, then a more nuanced spacing-first solver that still respects fixed plan boundaries. That was a real tradeoff. If I enforced guide windows too rigidly, I would reject cases where a compliant subrange still exists. If I loosened the model too far, I would risk inventing false positives. The final design tries to split that difference in a way that stays useful without becoming reckless.\par
+\pard\sa120\par
+\pard\sa120 Another important tradeoff was simplicity versus capability. The tool initially carried broader band support, but that made the product harder to explain and harder to validate. Narrowing the scope to 700/800 only was a product decision rooted in feasibility, not just convenience. The same was true of the UI shift toward "system frequencies the customer actually has." In the raw thread archive for the system-frequency UI work, my instructions were very direct: users should be able to enter only 800, only 700, or both, and the tool should evaluate the right parent plans behind the scenes. That is a good example of product thinking shaping the interface. The user should not need to think in terms of internal submodels just because the engine does.\par
+\pard\sa120\par
+\pard\sa120 Benchmarking in this project was mostly artifact and workflow benchmarking rather than competitor benchmarking. I repeatedly compared the product to the Motorola ordering guide, the in-band operation document, and the supplemental ordering form. Those sources acted as the external baseline. I also treated the target workflow itself as a benchmark: if the final result did not look usable to a planner or procurement-oriented user, the product had missed the point. That is why the ordering-form summary and PDF export matter. They are evidence that I was not only trying to compute a correct answer; I was trying to package the answer in a form that fits the job to be done.\par
+\pard\sa120\par
+\pard\sa120 The project also followed the engineering-discipline requirements from the assignment closely. I wrote the specification first, built incrementally, used version control throughout, tested repeatedly, and maintained project context for the agent. The archived thread summaries make that especially visible. Rather than relying on one long opaque conversation, I turned major work streams into reusable records in `docs/raw-threads`, `docs/dev-history`, and `docs/dev-log.md`. That was partly for organization, but it also became a product-development tool. The better the project memory got, the better the agent performed.\par
+\pard\sa120\par
+\pard\sa160\sb120\b\fs26 Technical Approach\b0\fs24\par
+\pard\sa120\par
+\pard\sa120 The technical approach ended up being modular and layered, which matches both the domain and the course emphasis on functional decomposition. At the center is a data-driven rules engine. `dvrs_tool/models.py` defines the main domain objects. `dvrs_tool/plan_data.py` stores the encoded technical plans and the regulatory classification helpers. `dvrs_tool/engine.py` handles validation, system-band resolution, deterministic pairing, candidate-plan selection, technical evaluation, and ordering-summary assembly. `dvrs_tool/api.py` exposes the engine through FastAPI. The web UI in `dvrs_tool/static/` provides the user-facing workflow. `dvrs_tool/pdf_export.py` creates the ordering-form-style export. Later, I added `dvrs_tool/desktop.py`, `run_desktop.py`, and `dvrs_desktop.spec` so the same product could be delivered in a desktop wrapper.\par
+\pard\sa120\par
+\pard\sa120 One key design decision was to keep the plan logic in data, not hard-coded in the UI. This project is fundamentally a rules problem. If the rules are buried in the frontend, every correction becomes harder to audit and test. By keeping plan definitions in `plan_data.py`, I could revise windows, guard bands, and fixed ranges without rewriting the user interface. This also made the system more testable and easier to extend later.\par
+\pard\sa120\par
+\pard\sa120 Another important decision was to keep technical validity and regulatory status separate. The constitution called for modular rules engines, and I followed that. A plan can be technically valid and still require coordination. That distinction matters because the product is trying to help with planning, not certify assignability. It would have been simpler to collapse everything into a single green/yellow/red output, but that would have made the product less honest and less useful.\par
+\pard\sa120\par
+\pard\sa120 I also made a deliberate choice to reuse the core engine across multiple surfaces. The same underlying logic supports the CLI, API, web UI, PDF export, and desktop runtime. That gave me a cleaner architecture and a more realistic product story. Different users may want different entry points, but the planning logic should stay consistent. The desktop wrapper is a good example of pragmatic product engineering. Instead of rewriting the app natively for Windows, I kept the FastAPI-plus-static-frontend architecture and wrapped it in a Qt WebEngine shell. That was faster, lower risk, and good enough for the intended audience.\par
+\pard\sa120\par
+\pard\sa120 The plan-table guard is probably the most product-specific technical safeguard in the repo. In `dvrs_tool/plan_table_guard.py` and `tests/test_plan_table_guard.py`, I added a hash-based confirmation mechanism so changes to the approved plan table require explicit acknowledgment. I added that because the repo history showed repeated corrections to the encoded ranges. In a domain like this, configuration drift is not a minor cleanup issue. It changes the product's behavior in ways that could be hard to notice. That guard is a small but important example of encoding product governance into the codebase.\par
+\pard\sa120\par
+\pard\sa120 Working with the agent was effective when I gave it tightly scoped, evidence-backed tasks. The raw threads show that my prompts usually worked best when they were concrete: update the engine to treat the passband rule this way, add these internal submodels but only expose the parent plans, run the full test suite and fix the failures without changing the approved plan table, remove VHF/UHF from active scope but keep them on the roadmap. In those cases, the agent was very productive because the task had clear boundaries and a way to check whether the result was right.\par
+\pard\sa120\par
+\pard\sa120 Where the agent was less reliable was in situations where the source material was ambiguous or the environment itself was the problem. The repo history shows several examples: interpreting the ordering guide, dealing with cached frontend assets, diagnosing GitHub CLI failures that turned out to be proxy issues, and tracing failed commits to Windows ACLs on `.git`. In those cases, the agent still helped, but only after I pushed it back toward concrete evidence. My main takeaway is that the agent did not replace product judgment. It made product judgment more necessary.\par
+\pard\sa120\par
+\pard\sa160\sb120\b\fs26 Testing and Validation\b0\fs24\par
+\pard\sa120\par
+\pard\sa120 My testing strategy centered on the rules engine first, then the interfaces built around it. At the time of writing, `python run_tests.py` passes with `52` tests and `1` skipped test. The skipped case is environment-specific: the FastAPI test client is not installed. I think that is a healthy result for this stage of the project, but the more important point is what the tests are actually doing.\par
+\pard\sa120\par
+\pard\sa120 The tests are not just smoke tests. They cover band detection, candidate-plan selection, mixed-band behavior, fixed-range handling, surviving compliant subranges, actual licensed DVRS frequency matching, structured API errors, CLI output, PDF export, and the plan-table confirmation guard. That means the tests are aimed at the high-risk parts of the product, not just the easiest code paths.\par
+\pard\sa120\par
+\pard\sa120 More importantly, the test suite caught real problems. In `docs/dev-history/dvrs-test-failures-cross-band-fix-summary.md`, a full regression run exposed incorrect behavior around cross-band variants, actual-frequency matching, and active mobile window enforcement. The fix stayed in `dvrs_tool/engine.py` specifically because I had already decided the approved plan table should not move. That is a good example of the tests doing more than confirming behavior after the fact. They forced a more precise understanding of where the defect really lived.\par
+\pard\sa120\par
+\pard\sa120 The plan-table validation work is another good example. Repeated corrections to the encoded ranges revealed that the dataset itself needed stronger protection. That led to the hash-based confirmation guard. In other words, one lesson from testing here was that not every important risk is a normal functional bug. Some risks come from silent data drift or from future edits that look harmless but materially change the product.\par
+\pard\sa120\par
+\pard\sa120 That said, the testing strategy has obvious gaps. Most of the coverage is at the unit and component level. I do not have formal end-to-end browser tests. I do not have usability testing with real planners. I do not have external validation against actual licensing outcomes. The desktop packaging path was also validated at a lighter level than the core engine. So my assessment of quality is positive but bounded. I trust the product as a planning tool within the rules it encodes. I would not present it as a production-grade authority on licensing or as a fully field-validated user experience.\par
+\pard\sa120\par
+\pard\sa160\sb120\b\fs26 Reflection\b0\fs24\par
+\pard\sa120\par
+\pard\sa120 If I were doing this project again, the main thing I would add earlier is direct user validation. I think I did a good job building around a real workflow and using the ordering form as a practical target, but most of the feedback loop still came from documents, tests, and my own interpretation. Even a small number of structured conversations with people who actually do this planning work would have improved prioritization and probably shortened some later iterations.\par
+\pard\sa120\par
+\pard\sa120 I would also make the rule-traceability process more explicit. The repo already has strong documentation compared to a typical student project, but some of the most expensive iterations came from ambiguity in the source material. A future version should probably maintain a direct mapping from encoded rules back to the specific guide page, note, or assumption behind them. That would make reviews easier and make it clearer when the issue is in the code versus in the underlying interpretation.\par
+\pard\sa120\par
+\pard\sa120 I would also add end-to-end UI automation. The unit tests did a lot of useful work, but some frontend issues, especially caching or rendering confusion, were harder to reason about than they should have been. A small Playwright-style suite for the main evaluation flow would likely pay for itself quickly.\par
+\pard\sa120\par
+\pard\sa120 The biggest thing this project changed for me is how I think about working with an agent. Before doing this, it would have been easy to imagine that the value of the agent was mainly speed. After doing this, I think the real value is speed under constraints. The better I defined the product, the better the agent performed. The worse the project memory was, or the looser the task was, the more likely the agent was to head in the wrong direction. In that sense, product management and agentic coding are deeply connected. A good constitution, a clear spec, explicit scope decisions, and strong tests are not overhead. They are what make the tool usable.\par
+\pard\sa120\par
+\pard\sa120 More broadly, this project reinforced a product-development lesson that I think the course was trying to teach directly: building something useful is not just about getting software to run. It is about framing the right problem, narrowing the scope when needed, preserving the reasoning behind tradeoffs, and being honest about uncertainty. I think this project was successful because it kept returning to those questions instead of treating implementation as the whole job.\par
+\pard\sa120\par
+\pard\sa160\sb120\b\fs26 References\b0\fs24\par
+\pard\sa120\par
+\pard\sa120 Repository and project artifacts:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? `dvrs-web-app-design.md`\par
+\pard\li360\fi-180\sa80 ? `docs/dev-log.md`\par
+\pard\li360\fi-180\sa80 ? `docs/dev-history/dvrs-engine-api-spacing-rules-summary.md`\par
+\pard\li360\fi-180\sa80 ? `docs/dev-history/dvrs-system-frequency-ui-and-single-band-submodels-summary.md`\par
+\pard\li360\fi-180\sa80 ? `docs/dev-history/plan-table-validation-history-summary.md`\par
+\pard\li360\fi-180\sa80 ? `docs/dev-history/repo-maintenance-700-800-scope-and-git-identity-summary.md`\par
+\pard\li360\fi-180\sa80 ? `docs/dev-history/windows-desktop-runtime-packaging-summary.md`\par
+\pard\li360\fi-180\sa80 ? `docs/dev-history/dvrs-test-failures-cross-band-fix-summary.md`\par
+\pard\li360\fi-180\sa80 ? `tests/test_engine.py`\par
+\pard\li360\fi-180\sa80 ? `tests/test_plan_table_guard.py`\par
+\pard\li360\fi-180\sa80 ? `project.pdf`\par
+\pard\sa120\par
+\pard\sa120 External product-development references consulted during drafting:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? Scrum Guides. *The Scrum Guide*. [https://scrumguides.org](https://scrumguides.org)\par
+\pard\li360\fi-180\sa80 ? Atlassian Agile resources on product requirements and product management practice. [https://www.atlassian.com/agile/product-management](https://www.atlassian.com/agile/product-management)\par
+\pard\li360\fi-180\sa80 ? Teresa Torres, resources on opportunity-solution thinking and continuous product discovery. [https://www.producttalk.org](https://www.producttalk.org)\par
+\pard\sa120\par
+\pard\sa160\sb120\b\fs26 Appendix A: Specification Document\b0\fs24\par
+\pard\sa120\par
+\pard\sa120 The following appendix reproduces the project constitution and specification from `dvrs-web-app-design.md`.\par
+\pard\sa120\par
+\pard\sa180\qc\b\fs32 DVRS In-Band Planning Web App\b0\fs24\par
+\pard\sa120\par
+\pard\sa160\sb120\b\fs26 1. Constitution\b0\fs24\par
+\pard\sa120\par
+\pard\sa120\sb80\b 1.1 Purpose\b0\par
+\pard\sa120 Build a web-based application that helps a public-safety radio planner evaluate Motorola Solutions DVR-LX 700 MHz and 800 MHz standard in-band configurations from minimal user input, then present:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? technically valid DVR-LX TX/RX ranges\par
+\pard\li360\fi-180\sa80 ? configurations that are not technically feasible\par
+\pard\li360\fi-180\sa80 ? configurations that may be technically feasible but not realistically licensable in the selected country\par
+\pard\li360\fi-180\sa80 ? a quote/order-style summary that mirrors the intent of the supplemental ordering form\par
+\pard\sa120\par
+\pard\sa120\sb80\b 1.2 Product Principles\b0\par
+\pard\sa120\par
+\pard\sa120 1. Accuracy before convenience.\par
+\pard\sa120 The app must never imply that a technically valid frequency plan is automatically licensable.\par
+\pard\sa120\par
+\pard\sa120 2. Explainability over black-box output.\par
+\pard\sa120 Every result must show why a plan passed or failed: band window, spacing rule, passband rule, pairing rule, or regulatory policy rule.\par
+\pard\sa120\par
+\pard\sa120 3. Regulatory humility.\par
+\pard\sa120 The app is a planning aid, not legal advice and not a replacement for FCC/ISED coordination, APCO/IMS A, or Motorola Solutions review.\par
+\pard\sa120\par
+\pard\sa120 4. Vendor-faithful logic.\par
+\pard\sa120 Technical plan evaluation must follow the Motorola Solutions ordering guide and in-band-operation guidance first, then layer country-specific regulatory checks on top.\par
+\pard\sa120\par
+\pard\sa120 5. Modular rules engine.\par
+\pard\sa120 Technical validation and regulatory validation must be separate modules so rules can evolve independently.\par
+\pard\sa120\par
+\pard\sa120 6. Ordering-guide fixed ranges first.\par
+\pard\sa120 When the Motorola Solutions ordering guide lists fixed DVRS TX/RX ranges for a standard plan, those published ranges control the plan definition. The app should recommend the feasible DVRS sub-range inside the published plan range that satisfies the plan rules. Technical validity for that plan means at least one paired DVRS channel inside the published fixed range can satisfy the plan rules.\par
+\pard\sa120\par
+\pard\sa120 7. Return the surviving compliant sub-range.\par
+\pard\sa120 For every plan, whether it uses a fixed ordering-guide range or only a broader allowed window, the engine must search for the remaining paired DVRS sub-range that still satisfies that plan's spacing, window, and pairing rules. If the nominal DVRS window is close to, partially overlaps, or would otherwise conflict with the system frequencies, the app must shrink the recommendation to the surviving compliant sub-range instead of rejecting the plan solely because the full nominal range would not fit. Reject the plan only when no compliant paired sub-range remains.\par
+\pard\sa120\par
+\pard\sa120 8. Conservative classification.\par
+\pard\sa120 When the app cannot determine licensability with high confidence, it must say "coordination required" rather than "valid."\par
+\pard\sa120\par
+\pard\sa120 9. Ordering workflow alignment.\par
+\pard\sa120 The final output must look usable by radio technicians and procurement staff, not just developers.\par
+\pard\sa120\par
+\pard\sa120\sb80\b 1.3 Scope\b0\par
+\pard\sa120 In scope:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? Motorola Solutions DVR-LX standard 700 MHz and 800 MHz in-band configurations\par
+\pard\li360\fi-180\sa80 ? country toggle for `United States` and `Canada`\par
+\pard\li360\fi-180\sa80 ? user input of the system frequency ranges actually available to the customer\par
+\pard\li360\fi-180\sa80 ? explicit system-frequency configuration selection: `700 only`, `800 only`, or `700 and 800`\par
+\pard\li360\fi-180\sa80 ? inferred 700 MHz / 800 MHz system-band detection where possible for single-band entries\par
+\pard\li360\fi-180\sa80 ? mixed 700 MHz and 800 MHz system evaluation\par
+\pard\li360\fi-180\sa80 ? computed system TX/RX summary\par
+\pard\li360\fi-180\sa80 ? proposed DVRS TX/RX ranges for each standard plan\par
+\pard\sa120   For fixed-range plans, these should be the recommended feasible sub-range inside the ordering-guide plan range, not a range that overlaps the system frequencies in violation of the plan spacing rules.\par
+\pard\sa120   For all plans, if only part of the nominal DVRS range remains spacing-compliant, return that surviving compliant sub-range rather than failing the plan.\par
+\pard\li360\fi-180\sa80 ? final-entry fields for actual licensed DVRS frequencies\par
+\pard\li360\fi-180\sa80 ? plan-by-plan feasibility and regulatory status\par
+\pard\sa120\par
+\pard\sa120 Out of scope for v1:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? VHF technical plan support\par
+\pard\li360\fi-180\sa80 ? UHF technical plan support\par
+\pard\li360\fi-180\sa80 ? direct FCC ULS or ISED license lookups\par
+\pard\li360\fi-180\sa80 ? automatic frequency coordination\par
+\pard\li360\fi-180\sa80 ? custom Motorola Solutions filtering plans\par
+\pard\li360\fi-180\sa80 ? cross-band configuration recommendation as the main output\par
+\pard\li360\fi-180\sa80 ? final legal certification that a channel is assignable\par
+\pard\sa120\par
+\pard\sa120\sb80\b 1.4 Output States\b0\par
+\pard\sa120 Each configuration must end in one of these states:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? `Technically valid + regulatorily plausible`\par
+\pard\li360\fi-180\sa80 ? `Technically valid + coordination required`\par
+\pard\li360\fi-180\sa80 ? `Technically invalid`\par
+\pard\li360\fi-180\sa80 ? `Technically valid but outside likely public-safety band plan`\par
+\pard\sa120\par
+\pard\sa160\sb120\b\fs26 2. Specification\b0\fs24\par
+\pard\sa120\par
+\pard\sa120\sb80\b 2.1 Source Constraints Taken From the Attached PDFs\b0\par
+\pard\sa120\par
+\pard\sa120 The app must encode the following Motorola Solutions guidance:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? Only standard frequency plans are standard offerings; anything else is custom.\par
+\pard\li360\fi-180\sa80 ? In-band filters are mechanically tuned and cannot be re-tuned in the field.\par
+\pard\li360\fi-180\sa80 ? In-band MSU transmit power must not exceed 50 W in DVRS-enabled modes.\par
+\pard\li360\fi-180\sa80 ? 700/800 in-band plans use a maximum DVR-LX passband of 1 MHz in the 2019 guidance, while the newer ordering guide expands certain 800 MHz plan windows; the rules engine should version the plan definitions explicitly and default to the latest ordering guide used by the project.\par
+\pard\li360\fi-180\sa80 ? The supplemental-ordering-form layout is the right model for the final summary panel.\par
+\pard\sa120\par
+\pard\sa120\sb80\b 2.2 User Inputs\b0\par
+\pard\sa120\par
+\pard\sa120 Required inputs:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? `Country`: `United States` or `Canada`\par
+\pard\li360\fi-180\sa80 ? `System frequency configuration`\par
+\pard\sa120   - `700 only`\par
+\pard\sa120   - `800 only`\par
+\pard\sa120   - `700 and 800`\par
+\pard\li360\fi-180\sa80 ? For `700 only`\par
+\pard\sa120   - `700 MHz system frequency low (MHz)`\par
+\pard\sa120   - `700 MHz system frequency high (MHz)`\par
+\pard\li360\fi-180\sa80 ? For `800 only`\par
+\pard\sa120   - `800 MHz system frequency low (MHz)`\par
+\pard\sa120   - `800 MHz system frequency high (MHz)`\par
+\pard\li360\fi-180\sa80 ? For `700 and 800`\par
+\pard\sa120   - `700 MHz system frequency low/high (MHz)`\par
+\pard\sa120   - `800 MHz system frequency low/high (MHz)`\par
+\pard\sa120\par
+\pard\sa120 Derived inputs:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? detected system-band family\par
+\pard\li360\fi-180\sa80 ? detected entered system passband\par
+\pard\li360\fi-180\sa80 ? paired system TX range, where the offset is deterministic for 700 MHz and 800 MHz system models\par
+\pard\sa120\par
+\pard\sa120 Terminology rule:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? The system frequency inputs describe the frequencies already present in the customer system.\par
+\pard\li360\fi-180\sa80 ? Standard plan names such as `700-A`, `700-B`, `700-C`, `800-A1`, `800-A2`, `800-B`, and `800-C` are named for the DVRS band placement, not the system band.\par
+\pard\li360\fi-180\sa80 ? Because of that, a `700` plan may be evaluated against an `800 only` system model, and an `800` plan may be evaluated against a `700 only` system model, when the standard plan definition allows it.\par
+\pard\sa120\par
+\pard\sa120 Conditional inputs:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? `Manual mobile receive override`\par
+\pard\sa120 Use only when the project later expands beyond deterministic 700 MHz and 800 MHz pairing rules.\par
+\pard\sa120\par
+\pard\sa120 Optional inputs:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? `Use latest ordering-guide ruleset` toggle, default `true`\par
+\pard\li360\fi-180\sa80 ? `Agency notes`\par
+\pard\li360\fi-180\sa80 ? `Actual licensed DVRS low/high TX`\par
+\pard\li360\fi-180\sa80 ? `Actual licensed DVRS low/high RX`\par
+\pard\sa120\par
+\pard\sa120\sb80\b 2.3 System-Frequency Configuration And Band Detection\b0\par
+\pard\sa120\par
+\pard\sa120 The UI should ask the user which system frequencies they have, not which plan family they want.\par
+\pard\sa120\par
+\pard\sa120 The app should interpret the provided system-frequency inputs as follows:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? `700 only`\par
+\pard\sa120   - one entered range in `799-805 MHz`\par
+\pard\li360\fi-180\sa80 ? `800 only`\par
+\pard\sa120   - one entered range in `806-824 MHz`\par
+\pard\li360\fi-180\sa80 ? `700 and 800`\par
+\pard\sa120   - one entered `700 MHz` system range and one entered `800 MHz` system range\par
+\pard\sa120\par
+\pard\sa120 For single-band entries, the app should infer the system band family from the entered system range:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? `700 MHz`: 799-805 MHz system frequencies\par
+\pard\li360\fi-180\sa80 ? `800 MHz`: 806-824 MHz system frequencies\par
+\pard\sa120\par
+\pard\sa120 If the input falls outside the supported 700 MHz or 800 MHz windows, the app must stop and show an input error.\par
+\pard\sa120\par
+\pard\sa120\sb80\b 2.4 System Frequency Computation\b0\par
+\pard\sa120\par
+\pard\sa120 The app must compute and display:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? `System RX` = the entered system frequency range\par
+\pard\li360\fi-180\sa80 ? `System TX` = paired system transmit range inferred from the applicable deterministic system model\par
+\pard\sa120\par
+\pard\sa120 Deterministic defaults:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? `700 MHz system`: system TX = entered system RX - 30 MHz\par
+\pard\li360\fi-180\sa80 ? `800 MHz system`: system TX = entered system RX + 45 MHz\par
+\pard\li360\fi-180\sa80 ? `700 and 800 mixed systems`: plan evaluation must use the band-specific system range attached to each candidate plan, and any returned DVRS recommendation must be computed from that same candidate plan's band-specific system ranges\par
+\pard\sa120\par
+\pard\sa120\sb80\b 2.5 Technical Plan Engine\b0\par
+\pard\sa120\par
+\pard\sa120 Represent each standard in-band configuration as data, not hard-coded UI logic.\par
+\pard\sa120\par
+\pard\sa120 Each plan definition should contain:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? `id`\par
+\pard\li360\fi-180\sa80 ? `bandFamily`\par
+\pard\li360\fi-180\sa80 ? `displayName`\par
+\pard\li360\fi-180\sa80 ? `mountCompatibility`\par
+\pard\li360\fi-180\sa80 ? `dvrsTxWindow`\par
+\pard\li360\fi-180\sa80 ? `dvrsRxWindow`\par
+\pard\li360\fi-180\sa80 ? `requiredDvrsSpacing`\par
+\pard\li360\fi-180\sa80 ? `requiredMsuSpacing`\par
+\pard\li360\fi-180\sa80 ? `minSeparationRules`\par
+\pard\li360\fi-180\sa80 ? `maxDvrsPassband`\par
+\pard\li360\fi-180\sa80 ? `maxMsuPassband`\par
+\pard\li360\fi-180\sa80 ? `fixedDvrsTxRange`\par
+\pard\li360\fi-180\sa80 ? `fixedDvrsRxRange`\par
+\pard\li360\fi-180\sa80 ? `notes`\par
+\pard\sa120\par
+\pard\sa120 Planned standard in-band coverage for v1:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? 700 MHz: Plans `A`, `B`, `C`\par
+\pard\li360\fi-180\sa80 ? 800 MHz: Plans `A1`, `A2`, `B`, `C`\par
+\pard\sa120\par
+\pard\sa120 Parent-plan evaluation model:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? The UI must present only parent plans.\par
+\pard\li360\fi-180\sa80 ? Some parent plans internally evaluate multiple system-frequency submodels.\par
+\pard\li360\fi-180\sa80 ? A parent plan passes if any supported submodel passes.\par
+\pard\li360\fi-180\sa80 ? The selected parent result returned to the UI must preserve the system ranges used by the winning submodel.\par
+\pard\sa120\par
+\pard\sa120 Required system-model mappings:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? For `800 only` system input, evaluate:\par
+\pard\sa120   - `700-A`\par
+\pard\sa120   - `700-B` using the `800 only` submodel\par
+\pard\sa120   - `700-C` using the `800 only` submodel\par
+\pard\sa120   - `800-C`\par
+\pard\li360\fi-180\sa80 ? For `700 only` system input, evaluate:\par
+\pard\sa120   - `700-B` using the `700 only` submodel\par
+\pard\sa120   - `700-C` using the `700 only` submodel\par
+\pard\sa120   - `800-A1` using the `700 only` submodel\par
+\pard\sa120   - `800-A2` using the `700 only` submodel\par
+\pard\sa120   - `800-B` using the `700 only` submodel\par
+\pard\li360\fi-180\sa80 ? For `700 and 800` system input, evaluate:\par
+\pard\sa120   - `700-B`\par
+\pard\sa120   - `700-C`\par
+\pard\sa120   - `800-A1`\par
+\pard\sa120   - `800-A2`\par
+\pard\sa120   - `800-B`\par
+\pard\sa120\par
+\pard\sa120 For each plan, evaluate:\par
+\pard\sa120\par
+\pard\sa120 1. Does the selected system-frequency model map to a supported submodel for the parent plan?\par
+\pard\sa120 2. Does the relevant system RX/TX block fit the plan's allowed windows?\par
+\pard\sa120 3. If the ordering guide provides fixed DVRS TX/RX ranges for that plan, use those fixed ranges as the plan boundary and compute the recommended feasible DVRS sub-range inside that published plan range.\par
+\pard\sa120 4. For fixed-range plans, determine whether at least one paired DVRS channel inside the published fixed range satisfies the spacing, window, and pairing rules.\par
+\pard\sa120 5. For non-fixed plans, search the allowed windows for the surviving paired DVRS sub-range that satisfies the spacing, window, and pairing rules.\par
+\pard\sa120 6. The proposed DVRS TX/RX ranges returned to the user must themselves satisfy the selected plan's required separations, even if that means returning only a narrow slice of the nominal plan range.\par
+\pard\sa120 7. Near-adjacency or partial overlap between the nominal DVRS range and the system range is not by itself a reason to fail a plan; fail only if no compliant paired DVRS sub-range remains after applying the plan rules.\par
+\pard\sa120 8. Is required channel spacing or duplex split respected?\par
+\pard\sa120\par
+\pard\sa120 Return:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? boolean pass/fail\par
+\pard\li360\fi-180\sa80 ? list of failures\par
+\pard\li360\fi-180\sa80 ? resulting proposed DVRS TX range\par
+\pard\li360\fi-180\sa80 ? resulting proposed DVRS RX range\par
+\pard\sa120\par
+\pard\sa120\sb80\b 2.6 Regulatory Rules Engine\b0\par
+\pard\sa120\par
+\pard\sa120 The regulatory engine must be a second pass applied after technical evaluation.\par
+\pard\sa120\par
+\pard\sa120 Each result gets:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? `regulatoryStatus`\par
+\pard\li360\fi-180\sa80 ? `confidence`\par
+\pard\li360\fi-180\sa80 ? `reasonCodes`\par
+\pard\li360\fi-180\sa80 ? `humanSummary`\par
+\pard\sa120\par
+\pard\sa120 Recommended statuses:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? `LIKELY_LICENSABLE`\par
+\pard\li360\fi-180\sa80 ? `COORDINATION_REQUIRED`\par
+\pard\li360\fi-180\sa80 ? `LIKELY_NOT_LICENSABLE`\par
+\pard\sa120\par
+\pard\sa120 #### United States rules for v1\par
+\pard\sa120\par
+\pard\sa120 Use a conservative model:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? `700 MHz`: treat 769-775 / 799-805 as public-safety-capable.\par
+\pard\li360\fi-180\sa80 ? `800 MHz`: treat public-safety use as plausible within the 800 public-safety pool and interoperability structure, but note border-area and channel-category constraints.\par
+\pard\sa120\par
+\pard\sa120 #### Canada rules for v1\par
+\pard\sa120\par
+\pard\sa120 Use a similarly conservative model:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? `768-776 / 798-806 MHz`: treat as public-safety-capable.\par
+\pard\li360\fi-180\sa80 ? `821-824 / 866-869 MHz`: treat as specifically public-safety-capable in 800 MHz.\par
+\pard\li360\fi-180\sa80 ? `806-821 / 851-866 MHz`: treat as broader land-mobile spectrum that may be used depending on sub-allocation and coordination; mark coordination-required unless a later ruleset refines it by channel block.\par
+\pard\sa120\par
+\pard\sa120\sb80\b 2.7 Result Presentation\b0\par
+\pard\sa120\par
+\pard\sa120 The app should render three panes:\par
+\pard\sa120\par
+\pard\sa120 1. `Input + System Summary`\par
+\pard\li360\fi-180\sa80 ? country\par
+\pard\li360\fi-180\sa80 ? selected system-frequency configuration\par
+\pard\li360\fi-180\sa80 ? detected system band\par
+\pard\li360\fi-180\sa80 ? user-entered system frequency low/high, or both entered 700 and 800 system ranges\par
+\pard\li360\fi-180\sa80 ? computed or assumed system TX low/high\par
+\pard\li360\fi-180\sa80 ? warnings about assumptions\par
+\pard\sa120\par
+\pard\sa120 2. `Standard Configuration Matrix`\par
+\pard\li360\fi-180\sa80 ? one card or row per standard in-band plan\par
+\pard\li360\fi-180\sa80 ? technical status\par
+\pard\li360\fi-180\sa80 ? regulatory status\par
+\pard\li360\fi-180\sa80 ? valid proposed DVRS TX range\par
+\pard\li360\fi-180\sa80 ? valid proposed DVRS RX range\par
+\pard\li360\fi-180\sa80 ? concise reason text\par
+\pard\sa120\par
+\pard\sa120 3. `Ordering Form Summary`\par
+\pard\li360\fi-180\sa80 ? system TX/RX values\par
+\pard\li360\fi-180\sa80 ? proposed DVRS TX/RX range\par
+\pard\li360\fi-180\sa80 ? blank editable fields for actual licensed DVRS TX/RX\par
+\pard\li360\fi-180\sa80 ? notes area\par
+\pard\li360\fi-180\sa80 ? export-friendly layout\par
+\pard\sa120\par
+\pard\sa120\sb80\b 2.8 UX Requirements\b0\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? Do not hide rejected plans; show all standard plans for the detected band family.\par
+\pard\li360\fi-180\sa80 ? Use color plus text labels; color alone is not enough.\par
+\pard\li360\fi-180\sa80 ? Every failed plan must expose the exact failing rule.\par
+\pard\li360\fi-180\sa80 ? Every yellow/red regulatory status must show a disclaimer and source basis.\par
+\pard\li360\fi-180\sa80 ? Show the Motorola Solutions note that custom plans require vendor review.\par
+\pard\sa120\par
+\pard\sa120\sb80\b 2.9 Non-Functional Requirements\b0\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? Rules must be data-driven JSON or TypeScript objects.\par
+\pard\li360\fi-180\sa80 ? Regulatory rules must be versioned separately from technical plan rules.\par
+\pard\li360\fi-180\sa80 ? Every calculation should be unit-tested.\par
+\pard\li360\fi-180\sa80 ? App should support future addition of `VHF`, `UHF`, `federal`, `rail`, or `utility` profiles without rewriting the core engine.\par
+\pard\sa120\par
+\pard\sa160\sb120\b\fs26 3. Implementation Plan\b0\fs24\par
+\pard\sa120\par
+\pard\sa120\sb80\b Phase 1. Foundations\b0\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? Create a single-page web app using a modular front end such as React + TypeScript.\par
+\pard\li360\fi-180\sa80 ? Define domain models for `BandFamily`, `TechnicalPlan`, `RegulatoryPolicy`, `EvaluationResult`, and `OrderSummary`.\par
+\pard\li360\fi-180\sa80 ? Build a source-controlled plan-definition dataset from the Motorola Solutions ordering guide.\par
+\pard\sa120\par
+\pard\sa120 Deliverable:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? static plan data and validation interfaces\par
+\pard\sa120\par
+\pard\sa120\sb80\b Phase 2. Technical Rules Engine\b0\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? Implement band detection.\par
+\pard\li360\fi-180\sa80 ? Implement system TX/RX computation.\par
+\pard\li360\fi-180\sa80 ? Implement plan-by-plan technical validation.\par
+\pard\li360\fi-180\sa80 ? Add unit tests for each supported 700/800 standard plan family.\par
+\pard\sa120\par
+\pard\sa120 Deliverable:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? deterministic technical evaluator with test coverage\par
+\pard\sa120\par
+\pard\sa120\sb80\b Phase 3. Regulatory Policy Layer\b0\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? Encode U.S. and Canada policy ranges as a separate rules module.\par
+\pard\li360\fi-180\sa80 ? Add confidence-based results and disclaimers.\par
+\pard\li360\fi-180\sa80 ? Add source metadata so each rule can point to the supporting reference.\par
+\pard\sa120\par
+\pard\sa120 Deliverable:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? country-aware regulatory classifier\par
+\pard\sa120\par
+\pard\sa120\sb80\b Phase 4. User Interface\b0\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? Build the input form.\par
+\pard\li360\fi-180\sa80 ? Build the configuration matrix.\par
+\pard\li360\fi-180\sa80 ? Build the ordering-form-style summary panel.\par
+\pard\li360\fi-180\sa80 ? Add assumption and warning banners.\par
+\pard\sa120\par
+\pard\sa120 Deliverable:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? end-to-end interactive planner\par
+\pard\sa120\par
+\pard\sa120\sb80\b Phase 5. Validation and Expert Review\b0\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? test sample cases from the Motorola Solutions in-band-operation guide\par
+\pard\li360\fi-180\sa80 ? compare results against at least a few known real-world band scenarios\par
+\pard\li360\fi-180\sa80 ? review edge cases with a radio technician or coordinator\par
+\pard\sa120\par
+\pard\sa120 Deliverable:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? validated v1 release candidate\par
+\pard\sa120\par
+\pard\sa120\sb80\b Phase 6. Nice-to-Have Enhancements\b0\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? PDF export of the ordering summary\par
+\pard\li360\fi-180\sa80 ? saved scenarios\par
+\pard\li360\fi-180\sa80 ? admin-editable regulatory policy tables\par
+\pard\li360\fi-180\sa80 ? optional direct license import from FCC ULS or a local CSV\par
+\pard\li360\fi-180\sa80 ? explicit profile selection such as `state/local public safety`, `federal`, or `other government`\par
+\pard\sa120\par
+\pard\sa160\sb120\b\fs26 4. Recommended Architecture\b0\fs24\par
+\pard\sa120\par
+\pard\sa120\sb80\b Front End\b0\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? React + TypeScript\par
+\pard\li360\fi-180\sa80 ? component groups:\par
+\pard\sa120   - `InputForm`\par
+\pard\sa120   - `SystemSummary`\par
+\pard\sa120   - `PlanResultsTable`\par
+\pard\sa120   - `OrderFormPreview`\par
+\pard\sa120   - `RuleExplanationDrawer`\par
+\pard\sa120\par
+\pard\sa120\sb80\b Core Modules\b0\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? `bandDetection.ts`\par
+\pard\li360\fi-180\sa80 ? `pairingInference.ts`\par
+\pard\li360\fi-180\sa80 ? `technicalPlans.ts`\par
+\pard\li360\fi-180\sa80 ? `technicalEvaluator.ts`\par
+\pard\li360\fi-180\sa80 ? `regulatoryPolicies.ts`\par
+\pard\li360\fi-180\sa80 ? `regulatoryEvaluator.ts`\par
+\pard\li360\fi-180\sa80 ? `formatters.ts`\par
+\pard\sa120\par
+\pard\sa120\sb80\b Test Modules\b0\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? `technicalEvaluator.test.ts`\par
+\pard\li360\fi-180\sa80 ? `regulatoryEvaluator.test.ts`\par
+\pard\li360\fi-180\sa80 ? `fixtures/*.json`\par
+\pard\sa120\par
+\pard\sa160\sb120\b\fs26 5. Important Assumptions\b0\fs24\par
+\pard\sa120\par
+\pard\sa120 1. The app should prefer the more recent ordering guide logic when the older narrative document and newer ordering guide differ.\par
+\pard\sa120    When the ordering guide publishes fixed standard-plan DVRS ranges, those ranges define the allowed recommendation boundary, while the returned proposed DVRS ranges must be a spacing-compliant subset when overlap would otherwise occur.\par
+\pard\sa120    The same subset-selection principle applies to non-fixed plans inside their broader allowed windows.\par
+\pard\sa120 2. The app should target typical state, provincial, county, municipal, and agency public-safety users, not federal-only licensing profiles, in v1.\par
+\pard\sa120 3. The app should classify uncertain licensability as `coordination required`.\par
+\pard\sa120 4. The app should preserve a data model flexible enough to add VHF and UHF planning later, even though v1 only evaluates 700 MHz and 800 MHz plans.\par
+\pard\sa120\par
+\pard\sa160\sb120\b\fs26 7. Roadmap\b0\fs24\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? Add VHF standard-plan support in a future release once the team is ready to reintroduce manual-pairing and narrow-passband workflows.\par
+\pard\li360\fi-180\sa80 ? Add UHF standard-plan support in a future release once the team is ready to reintroduce the 380-430 MHz and 450-470 MHz technical and regulatory rulesets.\par
+\pard\sa120\par
+\pard\sa160\sb120\b\fs26 6. Research Notes and Source Basis\b0\fs24\par
+\pard\sa120\par
+\pard\sa120 Attached documents used:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? `dvr-lx-ordering-guide-1 (1).pdf`\par
+\pard\li360\fi-180\sa80 ? `Introduction to  In-Band Operation-v1_2019-06-19.pdf`\par
+\pard\li360\fi-180\sa80 ? `supplemental-ordering-form-b2bf88f7.pdf`\par
+\pard\sa120\par
+\pard\sa120 Online sources reviewed for regulatory framing:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? Motorola Solutions DVR-LX ordering-guide mirror:\par
+\pard\sa120   - https://manuals.plus/m/79994c2ed840d6ccd9827e13cfef138ce4c5b89f6275934723d79f50c8dc679b\par
+\pard\li360\fi-180\sa80 ? FCC Public Safety Pool:\par
+\pard\sa120   - https://www.law.cornell.edu/cfr/text/47/90.20\par
+\pard\li360\fi-180\sa80 ? FCC 800 MHz public-safety pool in non-border areas:\par
+\pard\sa120   - https://www.law.cornell.edu/cfr/text/47/90.617\par
+\pard\li360\fi-180\sa80 ? FCC 700 MHz narrowband public-safety rules:\par
+\pard\sa120   - https://www.law.cornell.edu/cfr/text/47/90.531\par
+\pard\li360\fi-180\sa80 ? Canada SRSP-511 for 768-776 / 798-806 MHz:\par
+\pard\sa120   - https://ised-isde.canada.ca/site/spectrum-management-telecommunications/en/node/844\par
+\pard\li360\fi-180\sa80 ? Canada SRSP-502 for 806-824 / 851-869 MHz:\par
+\pard\sa120   - https://ised-isde.canada.ca/site/spectrum-management-telecommunications/en/devices-and-equipment/standard-radio-system-plans/srsp-502-technical-requirements-land-mobile-and-fixed-radio-services-operating-bands-806-821851-866\par
+\pard\sa120\par
+\pard\sa120 Regulatory caution:\par
+\pard\sa120\par
+\pard\li360\fi-180\sa80 ? U.S. and Canadian public-safety eligibility is channel-specific, border-sensitive, and coordinator-dependent.\par
+\pard\li360\fi-180\sa80 ? Because of that, the correct v1 behavior is classification and explanation, not automatic licensing approval.\par
+\pard\sa120\par
+}
