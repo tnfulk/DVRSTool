@@ -169,10 +169,13 @@ def create_app():
         async def index() -> RedirectResponse:
             return RedirectResponse(url="/static/index.html")
 
+    def evaluate_payload(payload: CalculationRequestModel):
+        request = CalculationRequest(**payload.model_dump())
+        return engine.evaluate(request)
+
     @app.post("/v1/evaluate")
     async def evaluate(payload: CalculationRequestModel = Body(...)) -> dict[str, Any]:
-        request = CalculationRequest(**payload.model_dump())
-        response = engine.evaluate(request)
+        response = evaluate_payload(payload)
         return {
             "status": "ok",
             "data": response.to_dict(),
@@ -180,8 +183,7 @@ def create_app():
 
     @app.post("/v1/order-summary.pdf")
     async def order_summary_pdf(payload: CalculationRequestModel = Body(...)) -> Response:
-        request = CalculationRequest(**payload.model_dump())
-        response = engine.evaluate(request)
+        response = evaluate_payload(payload)
         pdf = build_ordering_summary_pdf(response)
         return Response(
             content=pdf,

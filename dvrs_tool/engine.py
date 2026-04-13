@@ -23,6 +23,19 @@ from .models import (
 )
 from .plan_data import TECHNICAL_PLANS, classify_regulatory_status
 
+ALL_TECHNICAL_PLANS = tuple(plan for plans in TECHNICAL_PLANS.values() for plan in plans)
+PLAN_BY_ID = {plan.id: plan for plan in ALL_TECHNICAL_PLANS}
+
+
+def _plans_by_ids(*plan_ids: str) -> tuple[TechnicalPlan, ...]:
+    return tuple(PLAN_BY_ID[plan_id] for plan_id in plan_ids)
+
+
+EIGHT_HUNDRED_ONLY_PLANS = _plans_by_ids("700-A", "700-B", "700-C", "800-A1", "800-A2", "800-B", "800-C")
+SEVEN_HUNDRED_ONLY_HINT_PLANS = _plans_by_ids("700-B", "700-C", "800-A1", "800-A2", "800-B")
+MIXED_BAND_HINT_PLANS = _plans_by_ids("700-B", "700-C", "800-A1", "800-A2", "800-B")
+DETECTED_SEVEN_HUNDRED_PLANS = _plans_by_ids("700-A", "700-B", "700-C", "800-A1", "800-A2", "800-B")
+
 
 class DVRSCalculationEngine:
     """Evaluate Motorola Solutions DVRS in-band planning scenarios."""
@@ -120,7 +133,11 @@ class DVRSCalculationEngine:
                         }
                     ],
                 )
-            if value is not None and self._decimal_places(value) > self.MAX_INPUT_DECIMAL_PLACES:
+            if value is None:
+                continue
+
+            decimal_places = self._decimal_places(value)
+            if decimal_places > self.MAX_INPUT_DECIMAL_PLACES:
                 raise InputValidationError(
                     code="TOO_MANY_DECIMAL_PLACES",
                     message=(
@@ -130,7 +147,7 @@ class DVRSCalculationEngine:
                     details={
                         "field": field_name,
                         "value": value,
-                        "decimal_places": self._decimal_places(value),
+                        "decimal_places": decimal_places,
                         "max_decimal_places": self.MAX_INPUT_DECIMAL_PLACES,
                     },
                     rule_violations=[
@@ -143,7 +160,7 @@ class DVRSCalculationEngine:
                             "details": {
                                 "field": field_name,
                                 "value": value,
-                                "decimal_places": self._decimal_places(value),
+                                "decimal_places": decimal_places,
                                 "max_decimal_places": self.MAX_INPUT_DECIMAL_PLACES,
                             },
                         }
@@ -354,20 +371,8 @@ class DVRSCalculationEngine:
                 plan.band_family if system_band == BandFamily.BAND_700_800 else system_band,
             )
 
-        if plan.band_family == BandFamily.BAND_700:
-            plan_request = replace(
-                request,
-                mobile_tx_low_mhz=request.mobile_tx_700_low_mhz,
-                mobile_tx_high_mhz=request.mobile_tx_700_high_mhz,
-            )
-            return self._build_system_summary(plan_request, BandFamily.BAND_700)
-
-        plan_request = replace(
-            request,
-            mobile_tx_low_mhz=request.mobile_tx_800_low_mhz,
-            mobile_tx_high_mhz=request.mobile_tx_800_high_mhz,
-        )
-        return self._build_system_summary(plan_request, BandFamily.BAND_800)
+        plan_request = self._request_for_band_summary(request, plan.band_family)
+        return self._build_system_summary(plan_request, plan.band_family)
 
     def _request_with_plan_specific_pairing(
         self,
@@ -376,31 +381,34 @@ class DVRSCalculationEngine:
     ) -> CalculationRequest:
         return request
 
-    def _build_active_window_summary(
+    def _request_for_band_summary(
         self,
         request: CalculationRequest,
-        system_summary: SystemSummary,
-        plan: TechnicalPlan,
-    ) -> SystemSummary:
+        band: BandFamily,
+    ) -> CalculationRequest:
         if request.system_band_hint != SystemBandHint.BAND_700_AND_800:
-            return system_summary
+            return request
 
-        if plan.band_family == BandFamily.BAND_700:
-            plan_request = replace(
+        if band == BandFamily.BAND_700:
+            return replace(
                 request,
                 mobile_tx_low_mhz=request.mobile_tx_700_low_mhz,
                 mobile_tx_high_mhz=request.mobile_tx_700_high_mhz,
             )
-            return self._build_system_summary(plan_request, BandFamily.BAND_700)
 
-        if plan.band_family == BandFamily.BAND_800:
-            plan_request = replace(
+        if band == BandFamily.BAND_800:
+            return replace(
                 request,
                 mobile_tx_low_mhz=request.mobile_tx_800_low_mhz,
                 mobile_tx_high_mhz=request.mobile_tx_800_high_mhz,
             )
-            return self._build_system_summary(plan_request, BandFamily.BAND_800)
 
+        return request
+
+    def _build_active_window_summary(
+        self,
+        system_summary: SystemSummary,
+    ) -> SystemSummary:
         return system_summary
 
     def _evaluate_plan(
@@ -759,8 +767,7 @@ class DVRSCalculationEngine:
         if request.actual_dvrs_tx_mhz is not None or request.actual_dvrs_rx_mhz is not None:
             matching_plans = [
                 plan
-                for plans in TECHNICAL_PLANS.values()
-                for plan in plans
+                for plan in ALL_TECHNICAL_PLANS
                 if self._native_plan_matches_actual_dvrs(plan, request)
             ]
             hinted_plans = self._plans_for_system_band_hint(request.system_band_hint)
@@ -789,31 +796,13 @@ class DVRSCalculationEngine:
             return None
 
         if system_band_hint == SystemBandHint.BAND_800_ONLY:
-            eight_hundred_only_plan_ids = {"700-A", "700-B", "700-C", "800-A1", "800-A2", "800-B", "800-C"}
-            return [
-                plan
-                for family in (BandFamily.BAND_700, BandFamily.BAND_800)
-                for plan in TECHNICAL_PLANS[family]
-                if plan.id in eight_hundred_only_plan_ids
-            ]
+            return list(EIGHT_HUNDRED_ONLY_PLANS)
 
         if system_band_hint == SystemBandHint.BAND_700_ONLY:
-            seven_hundred_only_plan_ids = {"700-B", "700-C", "800-A1", "800-A2", "800-B"}
-            return [
-                plan
-                for family in (BandFamily.BAND_700, BandFamily.BAND_800)
-                for plan in TECHNICAL_PLANS[family]
-                if plan.id in seven_hundred_only_plan_ids
-            ]
+            return list(SEVEN_HUNDRED_ONLY_HINT_PLANS)
 
         if system_band_hint == SystemBandHint.BAND_700_AND_800:
-            mixed_plan_ids = {"700-B", "700-C", "800-A1", "800-A2", "800-B"}
-            return [
-                plan
-                for family in (BandFamily.BAND_700, BandFamily.BAND_800)
-                for plan in TECHNICAL_PLANS[family]
-                if plan.id in mixed_plan_ids
-            ]
+            return list(MIXED_BAND_HINT_PLANS)
 
         return None
 
@@ -822,13 +811,7 @@ class DVRSCalculationEngine:
         system_band: BandFamily,
     ) -> list[TechnicalPlan]:
         if system_band == BandFamily.BAND_700:
-            seven_hundred_only_plan_ids = {"700-A", "700-B", "700-C", "800-A1", "800-A2", "800-B"}
-            return [
-                plan
-                for family in (BandFamily.BAND_700, BandFamily.BAND_800)
-                for plan in TECHNICAL_PLANS[family]
-                if plan.id in seven_hundred_only_plan_ids
-            ]
+            return list(DETECTED_SEVEN_HUNDRED_PLANS)
         return list(TECHNICAL_PLANS[system_band])
 
     def _native_plan_matches_actual_dvrs(
@@ -1055,10 +1038,16 @@ class DVRSCalculationEngine:
             return None
 
         if variant_label == "700-system-only":
-            return self._build_system_summary(request, BandFamily.BAND_700)
+            return self._build_system_summary(
+                self._request_for_band_summary(request, BandFamily.BAND_700),
+                BandFamily.BAND_700,
+            )
 
         if variant_label == "800-system-only":
-            return self._build_system_summary(request, BandFamily.BAND_800)
+            return self._build_system_summary(
+                self._request_for_band_summary(request, BandFamily.BAND_800),
+                BandFamily.BAND_800,
+            )
 
         if variant_label == "700-and-800-system":
             return self._build_plan_system_summary(request, BandFamily.BAND_700_800, variant_plan)
@@ -1147,7 +1136,7 @@ class DVRSCalculationEngine:
         variant_label: str,
         plan: TechnicalPlan,
     ) -> RuleViolation | None:
-        active_summary = self._build_active_window_summary(request, system_summary, plan)
+        active_summary = self._build_active_window_summary(system_summary)
         allowed_mobile_tx_window = self._system_tx_window_for_plan(plan, active_summary)
         allowed_mobile_rx_window = self._system_rx_window_for_plan(plan, active_summary)
 
