@@ -3,10 +3,50 @@
 from pathlib import Path
 
 from PyInstaller.utils.hooks import collect_data_files
+from PyInstaller.utils.win32.versioninfo import (
+    VSVersionInfo,
+    FixedFileInfo,
+    StringFileInfo,
+    StringTable,
+    StringStruct,
+    VarFileInfo,
+    VarStruct,
+)
 
 
 project_root = Path(SPECPATH)
 datas = collect_data_files("dvrs_tool", includes=["static/*", "static/assets/*"])
+version_info = VSVersionInfo(
+    ffi=FixedFileInfo(
+        filevers=(0, 1, 0, 0),
+        prodvers=(0, 1, 0, 0),
+        mask=0x3F,
+        flags=0x0,
+        OS=0x40004,
+        fileType=0x1,
+        subtype=0x0,
+        date=(0, 0),
+    ),
+    kids=[
+        StringFileInfo(
+            [
+                StringTable(
+                    "040904B0",
+                    [
+                        StringStruct("CompanyName", "Motorola Solutions"),
+                        StringStruct("FileDescription", "DVRS Planner"),
+                        StringStruct("FileVersion", "0.1.0"),
+                        StringStruct("InternalName", "DVRSPlanner"),
+                        StringStruct("OriginalFilename", "DVRSPlanner.exe"),
+                        StringStruct("ProductName", "DVRS Planner"),
+                        StringStruct("ProductVersion", "0.1.0"),
+                    ],
+                )
+            ]
+        ),
+        VarFileInfo([VarStruct("Translation", [1033, 1200])]),
+    ],
+)
 
 analysis = Analysis(
     ["run_desktop.py"],
@@ -49,4 +89,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    version=version_info,
 )

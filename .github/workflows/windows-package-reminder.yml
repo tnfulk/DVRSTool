@@ -1,0 +1,55 @@
+name: Windows Release Reminder
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  remind-about-windows-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Remind maintainers to rebuild and publish the Windows release
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            base_ref="origin/${{ github.base_ref }}"
+            git fetch origin "${{ github.base_ref }}" --depth=1
+            diff_range="${base_ref}...HEAD"
+          else
+            before_sha="${{ github.event.before }}"
+            if [[ -z "${before_sha}" || "${before_sha}" == "0000000000000000000000000000000000000000" ]]; then
+              echo "No previous commit to compare against; skipping package reminder."
+              exit 0
+            fi
+            diff_range="${before_sha}...HEAD"
+          fi
+
+          changed_files="$(git diff --name-only "${diff_range}")"
+          echo "Changed files:"
+          printf '%s\n' "${changed_files}"
+
+          significant_app_change=0
+          while IFS= read -r file; do
+            [[ -z "${file}" ]] && continue
+            case "${file}" in
+              dvrs_tool/*|run_desktop.py|dvrs_desktop.spec|requirements-desktop.txt|requirements.txt|build_windows.ps1)
+                significant_app_change=1
+                ;;
+            esac
+          done <<< "${changed_files}"
+
+          if [[ "${significant_app_change}" -eq 0 ]]; then
+            echo "No significant application changes detected; Windows release reminder not needed."
+            exit 0
+          fi
+
+          echo "::warning::Significant DVRS application changes were detected. Rebuild the Windows package, smoke-test dist-release/DVRSPlanner.exe, and publish the executable through GitHub Releases before or with the next release cut. See README.md for the documented release prompt/command sequence."

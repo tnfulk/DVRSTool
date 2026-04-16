@@ -2,5 +2,7 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 build/
+build-release/
 dist/
+dist-release/
 *.spec.bak

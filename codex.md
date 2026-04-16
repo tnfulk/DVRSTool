@@ -16,6 +16,27 @@ No task is complete until documentation has been created or updated.
 
 ---
 
+## Windows Release Workflow
+
+This repository ships its Windows desktop executable through GitHub Releases.
+
+When meaningful application changes are made, Codex must treat the Windows package as part of the deliverable.
+
+Meaningful application changes include:
+- changes under `dvrs_tool/`
+- UI changes under `dvrs_tool/static/`
+- desktop-launcher changes such as `run_desktop.py`, `dvrs_tool/desktop.py`, `dvrs_desktop.spec`, `requirements-desktop.txt`, or `build_windows.ps1`
+
+When those files change, Codex must:
+- rebuild the Windows package before closing the task
+- verify the rebuilt executable launches successfully when feasible
+- prepare or update the GitHub Release asset workflow for the same change set
+- document that the package was rebuilt and which release version it represents
+
+If a task is documentation-only or otherwise does not change the shipped application behavior, Codex may skip the rebuild, but should say why.
+
+---
+
 ## Documentation Outputs
 
 For any task or thread, Codex must create or update the following:

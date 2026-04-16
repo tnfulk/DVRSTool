@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import socket
 import sys
+import tempfile
 import threading
 import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, TextIO
 
 from .api import create_app
 from .exceptions import MissingDependencyError
@@ -19,6 +23,9 @@ APP_TITLE = "DVRS In-Band Planner"
 HOST = "127.0.0.1"
 HEALTH_PATH = "/health"
 SERVER_START_TIMEOUT_SECONDS = 15.0
+DESKTOP_LOG_FILENAME = "dvrs_planner.log"
+_STDOUT_FALLBACK: TextIO | None = None
+_STDERR_FALLBACK: TextIO | None = None
 
 
 @dataclass
@@ -67,15 +74,7 @@ class DesktopRuntime:
 
         try:
             app = create_app()
-            config = Config(
-                app=app,
-                host=self.host,
-                port=self._port,
-                log_level="warning",
-                access_log=False,
-                server_header=False,
-                date_header=False,
-            )
+            config = Config(**_uvicorn_config_kwargs(app=app, host=self.host, port=self._port))
             self._server = Server(config)
             self._server.run()
         except BaseException as exc:
@@ -102,6 +101,8 @@ class DesktopRuntime:
 
 def main() -> int:
     _configure_qt_environment()
+    _ensure_standard_streams()
+    _configure_runtime_logging()
     runtime = DesktopRuntime()
     runtime.start()
 
@@ -160,6 +161,52 @@ def _configure_qt_environment() -> None:
     # that can occur in frozen desktop builds on locked-down endpoints.
     os.environ.setdefault("QTWEBENGINE_CHROMIUM_FLAGS", "--disable-logging")
     os.environ.setdefault("QTWEBENGINE_DISABLE_SANDBOX", "1")
+
+
+def _ensure_standard_streams() -> None:
+    global _STDOUT_FALLBACK, _STDERR_FALLBACK
+
+    if sys.stdout is None:
+        _STDOUT_FALLBACK = open(os.devnull, "w", encoding="utf-8")
+        sys.stdout = _STDOUT_FALLBACK
+    if sys.stderr is None:
+        _STDERR_FALLBACK = open(os.devnull, "w", encoding="utf-8")
+        sys.stderr = _STDERR_FALLBACK
+
+
+def _configure_runtime_logging() -> None:
+    if not _should_log_to_file():
+        return
+
+    logging.basicConfig(
+        filename=str(_desktop_log_path()),
+        level=logging.WARNING,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+        force=True,
+    )
+
+
+def _should_log_to_file() -> bool:
+    return bool(getattr(sys, "frozen", False) or _STDOUT_FALLBACK is not None or _STDERR_FALLBACK is not None)
+
+
+def _desktop_log_path() -> Path:
+    return Path(tempfile.gettempdir()) / DESKTOP_LOG_FILENAME
+
+
+def _uvicorn_config_kwargs(app: Any, host: str, port: int) -> dict[str, Any]:
+    return {
+        "app": app,
+        "host": host,
+        "port": port,
+        "log_level": "warning",
+        "access_log": False,
+        "server_header": False,
+        "date_header": False,
+        # Disable uvicorn's default console logging config. In a PyInstaller
+        # windowed build, stdout/stderr may be missing and formatter setup can fail.
+        "log_config": None,
+    }
 
 
 def _reserve_local_port(host: str) -> int:
