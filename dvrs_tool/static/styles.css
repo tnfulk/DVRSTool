@@ -725,6 +725,35 @@ button:disabled {
     linear-gradient(180deg, rgba(74, 166, 233, 0.08) 0%, rgba(12, 27, 44, 0.98) 100%);
 }
 
+.app-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+  padding-bottom: 8px;
+}
+
+.build-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid rgba(74, 166, 233, 0.24);
+  border-radius: 999px;
+  background: rgba(6, 19, 33, 0.72);
+  color: var(--ink);
+  font-size: 0.8rem;
+  font-weight: 700;
+  box-shadow: 0 10px 26px rgba(2, 9, 18, 0.2);
+}
+
+.build-chip-label {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .planner,
 .status-panel,
 .panel,
@@ -762,6 +791,10 @@ button:disabled {
 @media (max-width: 760px) {
   .app-shell {
     padding: 12px;
+  }
+
+  .app-footer {
+    justify-content: flex-start;
   }
 
   .intro-brand {

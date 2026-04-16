@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import unittest
+from asyncio import run as run_async
 from contextlib import redirect_stderr, redirect_stdout
 from io import StringIO
 
-from dvrs_tool.api import create_app
+from dvrs_tool.api import APP_VERSION, create_app
 from dvrs_tool.cli import build_parser, run
 from dvrs_tool.engine import DVRSCalculationEngine
 from dvrs_tool.exceptions import InputValidationError, UnsupportedBandError
@@ -849,6 +850,16 @@ class DVRSCalculationEngineTests(unittest.TestCase):
         self.assertIn("/", routes)
         self.assertIn("/v1/evaluate", routes)
         self.assertIn("/v1/order-summary.pdf", routes)
+
+    def test_health_route_exposes_current_build_version_metadata(self) -> None:
+        app = create_app()
+        health_route = next(route for route in app.routes if route.path == "/health")
+
+        payload = run_async(health_route.endpoint())
+
+        self.assertEqual(payload["status"], "ok")
+        self.assertEqual(payload["version"], APP_VERSION)
+        self.assertEqual(payload["build_tag"], f"v{APP_VERSION}")
 
     def test_api_evaluate_expects_json_body(self) -> None:
         app = create_app()

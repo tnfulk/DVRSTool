@@ -144,6 +144,8 @@ When those files change, Codex must:
 - verify the rebuilt executable launches successfully when feasible
 - prepare or update the GitHub Release asset workflow for the same change set
 - document that the package was rebuilt and which release version it represents
+- create and push the intended release tag explicitly before using `gh release create`
+- verify the remote tag target and the published GitHub Release metadata before calling the release complete
 
 If a task is documentation-only or otherwise does not change the shipped application behavior, Codex may skip the rebuild, but should say why.
 

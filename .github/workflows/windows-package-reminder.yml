@@ -52,4 +52,4 @@ jobs:
             exit 0
           fi
 
-          echo "::warning::Significant DVRS application changes were detected. Rebuild the Windows package, smoke-test dist-release/DVRSPlanner.exe, and publish the executable through GitHub Releases before or with the next release cut. See README.md for the documented release prompt/command sequence."
+          echo "::warning::Significant DVRS application changes were detected. Rebuild the Windows package, smoke-test the versioned dist-release artifact, create and push the release tag before running gh release create, then verify the remote tag target and published GitHub Release metadata. See docs/release-process.md and README.md for the documented release sequence."

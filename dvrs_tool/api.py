@@ -8,6 +8,8 @@ from .exceptions import DVRSBaseError, MissingDependencyError
 from .models import CalculationRequest, Country, SystemBandHint
 from .pdf_export import build_ordering_summary_pdf
 
+APP_VERSION = "0.1.2"
+
 
 def create_app():
     try:
@@ -29,7 +31,7 @@ def create_app():
     engine = DVRSCalculationEngine()
     app = FastAPI(
         title="DVRS In-Band Planning API",
-        version="0.1.1",
+        version=APP_VERSION,
         description="Planning API for Motorola Solutions DVRS standard in-band configurations.",
     )
     static_dir = Path(__file__).with_name("static")
@@ -160,7 +162,11 @@ def create_app():
 
     @app.get("/health")
     async def health() -> dict[str, str]:
-        return {"status": "ok"}
+        return {
+            "status": "ok",
+            "version": APP_VERSION,
+            "build_tag": f"v{APP_VERSION}",
+        }
 
     if static_dir.exists():
         app.mount("/static", StaticFiles(directory=static_dir), name="static")

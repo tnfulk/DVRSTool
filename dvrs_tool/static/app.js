@@ -6,6 +6,7 @@ const orderingSummary = document.querySelector("#ordering-summary");
 const downloadPdfButton = document.querySelector("#download-pdf");
 const resetPlannerButton = document.querySelector("#reset-planner");
 const resultsLayout = document.querySelector("#results-layout");
+const buildTagValue = document.querySelector("#build-tag-value");
 const apiBaseUrl = window.location.protocol === "file:" ? "http://127.0.0.1:8000" : "";
 let latestPayload = null;
 let latestInputPrecision = null;
@@ -209,6 +210,13 @@ function showResults() {
 
 function hideResults() {
   resultsLayout.hidden = true;
+}
+
+function setBuildTagLabel(label) {
+  if (!buildTagValue) {
+    return;
+  }
+  buildTagValue.textContent = label;
 }
 
 function resetRenderedResults() {
@@ -625,6 +633,25 @@ async function downloadOrderingPdf() {
   }
 }
 
+async function loadBuildTag() {
+  if (isOpenedDirectly()) {
+    setBuildTagLabel("API required");
+    return;
+  }
+
+  try {
+    const response = await fetch(`${apiBaseUrl}/health`);
+    if (!response.ok) {
+      throw new Error("health check failed");
+    }
+
+    const payload = await response.json();
+    setBuildTagLabel(payload.build_tag || payload.version || "Unknown");
+  } catch {
+    setBuildTagLabel("Unavailable");
+  }
+}
+
 form.addEventListener("submit", evaluatePlans);
 downloadPdfButton.addEventListener("click", downloadOrderingPdf);
 resetPlannerButton?.addEventListener("click", resetPlanner);
@@ -692,6 +719,7 @@ syncSystemBandFields();
 applyDefaultDate();
 resetRenderedResults();
 hideResults();
+loadBuildTag();
 if (isOpenedDirectly()) {
   setStatus("Open this app at http://127.0.0.1:8000/ after starting uvicorn. Direct file mode cannot call the backend API.", "error");
 }

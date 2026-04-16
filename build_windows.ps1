@@ -12,7 +12,7 @@ function Get-ReleaseVersion {
     }
 
     $apiContent = Get-Content -LiteralPath $ApiPath -Raw
-    $match = [regex]::Match($apiContent, 'version\s*=\s*"(?<version>\d+\.\d+\.\d+)"')
+    $match = [regex]::Match($apiContent, 'APP_VERSION\s*=\s*"(?<version>\d+\.\d+\.\d+)"')
     if (-not $match.Success) {
         throw "Unable to determine release version from dvrs_tool/api.py."
     }

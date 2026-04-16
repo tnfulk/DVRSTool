@@ -15,10 +15,10 @@ QUICK_REFERENCE = DOCS_DIR / "salesperson-quick-reference.md"
 FULL_GUIDE_PDF = DOCS_DIR / "salesperson-user-guide.pdf"
 QUICK_REFERENCE_PDF = DOCS_DIR / "salesperson-quick-reference.pdf"
 PDF_GENERATOR = REPO_ROOT / "tools" / "generate_sales_doc_pdfs.py"
+RELEASE_PROCESS = DOCS_DIR / "release-process.md"
+README = REPO_ROOT / "README.md"
 
 TOOL_IMPACT_PATHS = [
-    REPO_ROOT / "README.md",
-    REPO_ROOT / "dvrs-web-app-design.md",
     REPO_ROOT / "dvrs_tool",
 ]
 FRESHNESS_TOLERANCE_SECONDS = 1.0
@@ -109,6 +109,18 @@ class SalesDocumentationTests(unittest.TestCase):
         self.assertIn("dvrs planner", quick_text)
         self.assertIn("sales quick reference", quick_text)
         self.assertIn("confirm that the information provided is accurate", quick_text)
+
+    def test_release_process_includes_tag_and_release_verification(self) -> None:
+        release_text = RELEASE_PROCESS.read_text(encoding="utf-8").lower()
+        readme_text = README.read_text(encoding="utf-8").lower()
+
+        self.assertIn("do not rely on `gh release create` to create the tag automatically", release_text)
+        self.assertIn("git ls-remote --tags origin v0.1.2 v0.1.2^{}", release_text)
+        self.assertIn("gh release view v0.1.2", release_text)
+        self.assertIn("remote tag target", release_text)
+
+        self.assertIn("gh release view v0.1.2", readme_text)
+        self.assertIn("git ls-remote --tags origin v0.1.2 v0.1.2^{}", readme_text)
 
 
 if __name__ == "__main__":

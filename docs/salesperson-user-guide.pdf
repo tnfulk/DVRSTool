@@ -47,11 +47,11 @@ BT /F1 12 Tf 0.870 0.930 0.970 rg 1 0 0 1 54.00 575.00 Tm (Motorola Solutions sa
 BT /F1 10 Tf 0.870 0.930 0.970 rg 1 0 0 1 66.00 586.00 Tm (Ordering guide style companion) Tj ET
 BT /F1 10 Tf 0.870 0.930 0.970 rg 1 0 0 1 66.00 572.00 Tm (For salesperson use) Tj ET
 BT /F2 10 Tf 1.000 1.000 1.000 rg 1 0 0 1 66.00 552.00 Tm (Revision) Tj ET
-BT /F1 10 Tf 1.000 1.000 1.000 rg 1 0 0 1 128.00 552.00 Tm (2026-04-15) Tj ET
+BT /F1 10 Tf 1.000 1.000 1.000 rg 1 0 0 1 128.00 552.00 Tm (2026-04-16) Tj ET
 BT /F2 10 Tf 1.000 1.000 1.000 rg 1 0 0 1 66.00 534.00 Tm (Document) Tj ET
 BT /F1 10 Tf 1.000 1.000 1.000 rg 1 0 0 1 128.00 534.00 Tm (salesperson-user-guide) Tj ET
 BT /F1 10 Tf 1.000 1.000 1.000 rg 1 0 0 1 54.00 130.00 Tm (Source document: salesperson-user-guide.md) Tj ET
-BT /F1 10 Tf 1.000 1.000 1.000 rg 1 0 0 1 54.00 112.00 Tm (Revision generated from repo state: 2026-04-15) Tj ET
+BT /F1 10 Tf 1.000 1.000 1.000 rg 1 0 0 1 54.00 112.00 Tm (Revision generated from repo state: 2026-04-16) Tj ET
 BT /F1 12 Tf 0.870 0.930 0.970 rg 1 0 0 1 54.00 76.00 Tm (DVRS Planner User Guide for Sales) Tj ET
 BT /F2 12 Tf 1.000 1.000 1.000 rg 1 0 0 1 526.00 710.00 Tm (Motorola) Tj ET
 BT /F2 12 Tf 1.000 1.000 1.000 rg 1 0 0 1 512.00 694.00 Tm (Solutions) Tj ET
@@ -398,7 +398,7 @@ BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 94.00 Tm (recommendations or a c
 endstream
 endobj
 18 0 obj
-<< /Length 3607 >>
+<< /Length 3684 >>
 stream
 q 0.050 0.150 0.270 rg 0.00 744.00 612.00 48.00 re f Q
 BT /F2 20 Tf 1.000 1.000 1.000 rg 1 0 0 1 54.00 762.00 Tm (DVRS Planner User Guide for Sales) Tj ET
@@ -422,10 +422,10 @@ BT /F2 13 Tf 0.050 0.150 0.270 rg 1 0 0 1 62.00 564.00 Tm (Maintenance Note) Tj 
 BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 538.00 Tm (This guide and docs/salesperson-quick-reference.md should be reviewed during documentation) Tj ET
 BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 524.00 Tm (passes whenever repository changes affect supported workflow, inputs, outputs, statuses, or) Tj ET
 BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 510.00 Tm (escalation guidance.) Tj ET
-BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 490.00 Tm (Documentation review for release 0.1.1: the current web and packaged desktop experiences carry) Tj ET
-BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 476.00 Tm (Motorola Solutions branding assets in the application header and icon surfaces, and the release) Tj ET
-BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 462.00 Tm (handoff now uses versioned Windows build output folders, with no change to the planner workflow) Tj ET
-BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 448.00 Tm (described above.) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 490.00 Tm (Documentation review for release 0.1.2: the current web and packaged desktop experiences carry) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 476.00 Tm (Motorola Solutions branding assets in the application header and icon surfaces, the footer now) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 462.00 Tm (shows the current build tag for support and version confirmation, and the release handoff uses) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 448.00 Tm (versioned Windows build output folders, with no change to the planner workflow described above.) Tj ET
 BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 428.00 Tm (Maintain the corresponding PDF exports in docs/salesperson-user-guide.pdf and) Tj ET
 BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 414.00 Tm (docs/salesperson-quick-reference.pdf at the same time so the shared repo handoff materials stay) Tj ET
 BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 400.00 Tm (current.) Tj ET
@@ -458,5 +458,5 @@ xref
 trailer
 << /Size 19 /Root 1 0 R >>
 startxref
-35052
+35129
 %%EOF

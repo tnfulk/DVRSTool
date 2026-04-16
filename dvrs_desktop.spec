@@ -35,11 +35,11 @@ version_info = VSVersionInfo(
                     [
                         StringStruct("CompanyName", "Motorola Solutions"),
                         StringStruct("FileDescription", "DVRS Planner"),
-                        StringStruct("FileVersion", "0.1.1"),
+                        StringStruct("FileVersion", "0.1.2"),
                         StringStruct("InternalName", "DVRSPlanner"),
                         StringStruct("OriginalFilename", "DVRSPlanner.exe"),
                         StringStruct("ProductName", "DVRS Planner"),
-                        StringStruct("ProductVersion", "0.1.1"),
+                        StringStruct("ProductVersion", "0.1.2"),
                     ],
                 )
             ]
