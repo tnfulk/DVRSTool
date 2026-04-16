@@ -29,7 +29,7 @@ def create_app():
     engine = DVRSCalculationEngine()
     app = FastAPI(
         title="DVRS In-Band Planning API",
-        version="0.1.0",
+        version="0.1.1",
         description="Planning API for Motorola Solutions DVRS standard in-band configurations.",
     )
     static_dir = Path(__file__).with_name("static")

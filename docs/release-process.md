@@ -50,10 +50,19 @@ If the release includes user-facing workflow or documentation changes, confirm t
 .\build_windows.ps1 -Clean
 ```
 
+The build script now writes to versioned output folders derived from the application version in `dvrs_tool/api.py`. For example, version `0.1.1` builds to `dist-release-011\DVRSPlanner.exe` and uses `build-release-011\` for the PyInstaller work tree.
+
+If `-Clean` cannot remove the matching versioned build or dist folder after its retry loop, the script stops and reports that the current versioned output is locked. In that case:
+
+- close the process holding the lock and rerun the build, or
+- supply a new version tag in the code before rebuilding so the script targets a new versioned output folder
+
+The script also now fails fast when `pip install` or `PyInstaller` returns a nonzero exit code.
+
 4. Smoke-test the packaged executable.
 
 ```powershell
-.\dist-release\DVRSPlanner.exe
+.\dist-release-011\DVRSPlanner.exe
 ```
 
 Confirm the app opens cleanly before continuing.
@@ -69,15 +78,15 @@ git push origin main
 6. Create the release tag and publish the GitHub Release.
 
 ```powershell
-git tag v0.1.0
-git push origin v0.1.0
-gh release create v0.1.0 .\dist-release\DVRSPlanner.exe --title "DVRS Planner 0.1.0" --notes "Windows desktop release 0.1.0"
+git tag v0.1.1
+git push origin v0.1.1
+gh release create v0.1.1 .\dist-release-011\DVRSPlanner.exe --title "DVRS Planner 0.1.1" --notes "Windows desktop release 0.1.1"
 ```
 
 If the tag already exists, update the release asset instead:
 
 ```powershell
-gh release upload v0.1.0 .\dist-release\DVRSPlanner.exe --clobber
+gh release upload v0.1.1 .\dist-release-011\DVRSPlanner.exe --clobber
 ```
 
 ## Codex Prompt Sequence
@@ -87,30 +96,31 @@ Editors using Codex can use the following prompts directly.
 ### Prompt 1: Prepare the release build
 
 ```text
-Regenerate the sales PDF documents if needed, rebuild the Windows desktop package for this repo, run the tests, smoke-test the packaged executable, and tell me if the release artifact and companion user documents are ready for publication. This is DVRS Planner version 0.1.0.
+Regenerate the sales PDF documents if needed, rebuild the Windows desktop package for this repo, run the tests, smoke-test the packaged executable, and tell me if the release artifact and companion user documents are ready for publication. This is DVRS Planner version 0.1.1.
 ```
 
 ### Prompt 2: Commit and push the source changes
 
 ```text
-Stage, commit, and push the pending source, workflow, documentation, generated sales PDF, and packaging-script changes for the 0.1.0 Windows release, but do not commit the built executable into Git.
+Stage, commit, and push the pending source, workflow, documentation, generated sales PDF, and packaging-script changes for the 0.1.1 Windows release, but do not commit the built executable into Git.
 ```
 
 ### Prompt 3: Publish the GitHub Release
 
 ```text
-Create or update the GitHub Release for DVRS Planner 0.1.0 using the built file at dist-release/DVRSPlanner.exe, and summarize the exact tag, title, and asset that were published.
+Create or update the GitHub Release for DVRS Planner 0.1.1 using the built file at dist-release-011/DVRSPlanner.exe, and summarize the exact tag, title, and asset that were published.
 ```
 
 ## Notes For Editors
 
-- `dist-release/DVRSPlanner.exe` is a local build artifact and release asset, not a normal Git-tracked file.
+- The local release build artifact is the versioned executable path such as `dist-release-011\DVRSPlanner.exe`, not a normal Git-tracked file.
 - The salesperson-facing PDF handoff files under `docs\` are intended to be Git-tracked companion documents when they are updated for a release.
 - If the release changes what a salesperson sees or tells a customer, regenerate the sales PDFs and include them in the normal source commit so the release-ready documentation matches the executable.
 - If `gh` is affected by the local proxy wrapper rules in this repo, use:
 
 ```powershell
-.\gh-safe.ps1 release create v0.1.0 .\dist-release\DVRSPlanner.exe --title "DVRS Planner 0.1.0" --notes "Windows desktop release 0.1.0"
+.\gh-safe.ps1 release create v0.1.1 .\dist-release-011\DVRSPlanner.exe --title "DVRS Planner 0.1.1" --notes "Windows desktop release 0.1.1"
 ```
 
 - If you need to replace an already-published executable for the same tag, use `gh release upload --clobber`.
+- The build script currently derives the versioned output suffix from the version string in `dvrs_tool/api.py`. If the repo later adds a dedicated version module, update `build_windows.ps1` and this release playbook to use that shared source of truth instead.

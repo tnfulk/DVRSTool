@@ -115,6 +115,7 @@ def main() -> int:
 def _run_qt_window(runtime: DesktopRuntime) -> int:
     try:
         from PySide6.QtCore import QUrl
+        from PySide6.QtGui import QIcon
         from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox
         from PySide6.QtWebEngineWidgets import QWebEngineView
     except ImportError as exc:
@@ -127,10 +128,13 @@ def _run_qt_window(runtime: DesktopRuntime) -> int:
             },
         ) from exc
 
+    icon_path = Path(__file__).with_name("static") / "assets" / "branding" / "motorola-solutions-emsignia-app.ico"
+
     class MainWindow(QMainWindow):
         def __init__(self) -> None:
             super().__init__()
             self.setWindowTitle(APP_TITLE)
+            self.setWindowIcon(QIcon(str(icon_path)))
             self.resize(1440, 960)
 
             self.browser = QWebEngineView(self)
@@ -151,6 +155,7 @@ def _run_qt_window(runtime: DesktopRuntime) -> int:
 
     app = QApplication.instance() or QApplication(sys.argv)
     app.setApplicationName(APP_TITLE)
+    app.setWindowIcon(QIcon(str(icon_path)))
     window = MainWindow()
     window.show()
     return app.exec()

@@ -76,9 +76,11 @@ This branch now includes a PyInstaller spec for a windowed desktop build:
 .\build_windows.ps1
 ```
 
-The packaged executable will be written under `dist-release\DVRSPlanner.exe`.
+The packaged executable will be written under a versioned output folder derived from the application version in `dvrs_tool/api.py`. For example, version `0.1.1` builds to `dist-release-011\DVRSPlanner.exe` and uses `build-release-011\` for PyInstaller work files.
 
-The local build artifact is `dist-release\DVRSPlanner.exe`. This file is intentionally not committed to normal Git history because the packaged WebEngine-based desktop binary is larger than GitHub's standard file-size limit. Publish the executable through GitHub Releases instead.
+During `-Clean`, the script now retries locked-folder cleanup briefly before failing. If the matching versioned output folder remains locked after those retries, the script stops and tells the editor to either release the lock or bump the version tag before retrying the build.
+
+The local build artifact is the versioned executable path such as `dist-release-011\DVRSPlanner.exe`. This file is intentionally not committed to normal Git history because the packaged WebEngine-based desktop binary is larger than GitHub's standard file-size limit. Publish the executable through GitHub Releases instead.
 
 ## Desktop packaging notes
 
@@ -87,10 +89,12 @@ The local build artifact is `dist-release\DVRSPlanner.exe`. This file is intenti
 - Packaged runtime warnings and errors can be written to the temporary log file `dvrs_planner.log` in the current user's temp directory.
 - `python run_tests.py` now includes regression coverage for the packaged desktop bootstrap path so missing-stdio startup failures are caught before future rebuilds.
 - The repository includes a GitHub Actions reminder workflow that warns maintainers when significant application files change so the Windows package can be rebuilt and published through GitHub Releases.
+- The build script now fails fast if dependency installation or PyInstaller returns a nonzero exit code instead of continuing into a misleading partial build.
+- The build script currently treats the version string in `dvrs_tool/api.py` as the source of truth for versioned output folder names. If a dedicated version module is added later, update `build_windows.ps1` to read from that shared version source instead.
 
 ## Publish a Windows release
 
-Use the documented playbook in `docs/release-process.md` when you need to publish a Windows executable for a tagged release such as DVRS Planner `0.1.0`.
+Use the documented playbook in `docs/release-process.md` when you need to publish a Windows executable for a tagged release such as DVRS Planner `0.1.1`.
 
 ## Troubleshooting packaged startup
 

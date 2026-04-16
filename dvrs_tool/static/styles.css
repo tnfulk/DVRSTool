@@ -119,6 +119,19 @@ textarea {
     linear-gradient(135deg, #0f2740 0%, #15395a 100%);
 }
 
+.intro-brand {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.brand-logo {
+  width: clamp(180px, 24vw, 320px);
+  max-width: 100%;
+  height: auto;
+  flex: 0 1 auto;
+}
+
 .eyebrow {
   margin: 0 0 6px;
   color: var(--blue);
@@ -749,6 +762,15 @@ button:disabled {
 @media (max-width: 760px) {
   .app-shell {
     padding: 12px;
+  }
+
+  .intro-brand {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .brand-logo {
+    width: min(220px, 100%);
   }
 
   .intro,

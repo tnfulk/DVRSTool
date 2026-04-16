@@ -18,8 +18,8 @@ project_root = Path(SPECPATH)
 datas = collect_data_files("dvrs_tool", includes=["static/*", "static/assets/*"])
 version_info = VSVersionInfo(
     ffi=FixedFileInfo(
-        filevers=(0, 1, 0, 0),
-        prodvers=(0, 1, 0, 0),
+        filevers=(0, 1, 1, 0),
+        prodvers=(0, 1, 1, 0),
         mask=0x3F,
         flags=0x0,
         OS=0x40004,
@@ -35,11 +35,11 @@ version_info = VSVersionInfo(
                     [
                         StringStruct("CompanyName", "Motorola Solutions"),
                         StringStruct("FileDescription", "DVRS Planner"),
-                        StringStruct("FileVersion", "0.1.0"),
+                        StringStruct("FileVersion", "0.1.1"),
                         StringStruct("InternalName", "DVRSPlanner"),
                         StringStruct("OriginalFilename", "DVRSPlanner.exe"),
                         StringStruct("ProductName", "DVRS Planner"),
-                        StringStruct("ProductVersion", "0.1.0"),
+                        StringStruct("ProductVersion", "0.1.1"),
                     ],
                 )
             ]
@@ -89,5 +89,6 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon=str(project_root / "dvrs_tool" / "static" / "assets" / "branding" / "motorola-solutions-emsignia-app.ico"),
     version=version_info,
 )
