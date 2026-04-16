@@ -16,6 +16,118 @@ No task is complete until documentation has been created or updated.
 
 ---
 
+## Spec-First Execution
+
+`dvrs-web-app-design.md` is the primary project specification and the default source of truth for product intent, scope, workflow, and acceptance targets.
+
+Codex must:
+- review the current specification before making meaningful product changes
+- work from the spec instead of ad hoc prompt drift whenever the spec covers the task
+- identify conflicts between the spec, repository behavior, and user requests before changing implemented behavior
+- update the specification when project decisions materially change scope, workflow, architecture, or acceptance expectations
+
+If the specification is incomplete for a requested task, Codex should make the smallest reasonable assumption, state it, and prefer updating the spec so future conversations inherit the decision.
+
+---
+
+## Required Development Cycle
+
+This project follows the course guide's core development loop:
+
+1. define or confirm the task against the spec
+2. implement the smallest useful increment
+3. run the relevant application path or command when feasible
+4. add or update tests that prove the change works
+5. review results against the spec and acceptance criteria
+6. create a commit checkpoint when the increment is working
+
+Codex must not treat broken, unverified, or untested work as complete when verification is feasible.
+
+---
+
+## Incremental Delivery Rules
+
+Codex must prefer small, dependency-aware increments over broad multi-feature changes.
+
+When working on implementation:
+- start with the simplest version that can be run and checked
+- complete one scoped task at a time unless the user explicitly requests a larger bundled change
+- keep the repository in a working state between increments whenever feasible
+- avoid speculative architecture changes that are not required by the current task or spec
+
+If a requested feature is large or ambiguous, Codex should break it into concrete increments and execute the earliest useful one first.
+
+---
+
+## Verification and Testing
+
+Meaningful product changes must be verified, not just described.
+
+Codex must:
+- run relevant commands after meaningful code changes when feasible
+- report whether the app, script, or test command was actually run
+- add or update tests for behavior changes unless the task is explicitly exploratory or documentation-only
+- check outcomes against the specification, not only against whether code compiles
+
+Relevant verification can include:
+- unit tests
+- integration tests
+- API checks
+- local UI smoke tests
+- packaging verification when the shipped desktop deliverable changes
+
+If verification is blocked, Codex must say what could not be verified and why.
+
+---
+
+## Acceptance Criteria
+
+Tasks should be grounded in explicit acceptance criteria whenever possible.
+
+Codex must:
+- use acceptance criteria already present in the specification when available
+- infer practical acceptance criteria from the spec when they are implied but unstated
+- surface missing or conflicting acceptance criteria before making high-risk behavior changes
+
+---
+
+## Commit Checkpoints
+
+This project should maintain recoverable working checkpoints throughout development.
+
+When an increment is implemented and verified, Codex should:
+- prepare the repo for a clean commit checkpoint
+- summarize what the checkpoint represents
+- recommend or create a commit when the user asks for commit help or when the workflow clearly includes committing
+
+Codex should preserve the guide's principle that each completed increment should leave the project in a state that can be returned to safely.
+
+---
+
+## Project Memory and Context Recovery
+
+Documentation is not only a deliverable; it is also the continuity layer between conversations.
+
+Codex should:
+- keep the spec, summaries, and dev log current enough that a new conversation can resume work reliably
+- capture important design decisions, acceptance decisions, and abandoned approaches
+- prefer updating project documents over relying on long conversational memory
+
+If a conversation becomes long, inconsistent, or degraded, Codex should rely on the repository documents as the durable source of project memory.
+
+---
+
+## Security and Secret Handling
+
+Codex must not request, copy into docs, or echo secrets unless absolutely required by the task.
+
+Codex should:
+- avoid placing credentials, API keys, tokens, or passwords into project documentation or archived threads
+- prefer redacted examples when configuration documentation is necessary
+- warn clearly if a task appears to require handling sensitive values
+
+---
+
 ## Windows Release Workflow
 
 This repository ships its Windows desktop executable through GitHub Releases.

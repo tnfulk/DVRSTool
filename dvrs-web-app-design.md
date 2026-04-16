@@ -4,6 +4,21 @@ Last reviewed against the repository implementation: `2026-04-12`
 
 This specification was refreshed after reviewing the repository documentation, engine, API, static web UI, desktop wrapper, and tests. It is intended to describe the current project state plus germane future roadmap items, not an aspirational architecture that the repo does not yet implement.
 
+## 0. Problem Statement
+
+This project addresses a planning problem faced by Motorola Solutions sales and planning stakeholders who need to recommend a standard in-band DVRS configuration without doing a manual engineering review for every quote.
+
+Today that workflow depends on reading ordering guides, checking fixed plan ranges, reasoning about pairing rules, and manually deciding whether a proposed configuration is technically compatible or likely to require coordination. That process is slow, difficult to audit, and easy to misinterpret when the user is not a radio-system specialist.
+
+The first-version product goal is a trustworthy planning aid that:
+
+- accepts the system frequencies the customer already has
+- evaluates the supported standard 700 MHz and 800 MHz DVRS plans against those frequencies
+- explains why each plan is technically valid, invalid, or coordination-dependent
+- produces an ordering-summary style output that is usable in the quote workflow
+
+The project matters because it reduces avoidable quoting mistakes, makes plan-screening logic repeatable, and gives non-engineering users a more consistent path to a technically informed recommendation while still preserving the need for formal regulatory and vendor review where required.
+
 ## 1. Constitution
 
 ### 1.1 Purpose
@@ -265,7 +280,17 @@ The shipped web UI presents three main panels:
    - summary notes
    - PDF export action
 
-### 2.11 Delivery Architecture
+### 2.11 User Workflow
+The intended primary workflow for the current release is:
+
+1. Select the country and the applicable system-frequency mode.
+2. Enter the customer system frequencies already in use.
+3. Optionally enter exact DVRS TX/RX values when validating a known proposal.
+4. Review the returned parent-plan results, including technical status, regulatory status, and explanatory notes.
+5. Compare the surviving valid or coordination-dependent options in the quote workflow.
+6. Export or reference the ordering-summary style output for downstream procurement activity.
+
+### 2.12 Delivery Architecture
 The current repository started as a draft using React/TypeScript, but has since been modified. It is not a React/TypeScript app and should not be documented as one.
 
 Current shipped architecture:
@@ -278,11 +303,23 @@ Current shipped architecture:
 - desktop wrapper: PySide6 WebEngine launcher in `dvrs_tool/desktop.py` with `run_desktop.py`
 - Windows packaging path: PyInstaller via `dvrs_desktop.spec` and `build_windows.ps1`
 
-### 2.12 Testing and Quality Expectations
+### 2.13 Testing and Quality Expectations
 
 - plan-table edits must be intentional and accompanied by a guard-file update
 - engine, API, CLI, and PDF-export behavior should remain covered by unit tests
 - regressions around mixed-band evaluation, plan sub-ranges, exact DVRS frequencies, and validation messages should remain tested
+- each meaningful increment should leave the app runnable and the relevant checks passing
+- tests should verify both correct outcomes and explanation quality for invalid or coordination-dependent results
+
+### 2.14 Acceptance-Oriented Verification Targets
+The following checks capture the intended meaning of done for the current scope:
+
+- given supported `700 only` input, the engine returns the expected candidate parent plans and preserves deterministic system pairing
+- given supported `800 only` input, the engine returns the expected candidate parent plans including `800-C` where applicable
+- given mixed `700 and 800` input, each candidate plan evaluates against the correct side-specific system ranges
+- given spacing or window conflicts, a plan fails only when no compliant paired DVRS sub-range survives
+- given exact DVRS TX/RX inputs outside the allowed rules, the result explains the violation clearly
+- given technically valid output, the UI and PDF summary preserve the recommended DVRS frequencies and explanatory notes
 
 ## 3. Implementation Status
 
@@ -326,14 +363,92 @@ Current shipped architecture:
 - packaging: `dvrs_desktop.spec` and `build_windows.ps1`
 - regression suite: `tests/test_engine.py` and `tests/test_plan_table_guard.py`
 
-## 5. Important Assumptions
+## 5. Plan
+
+### 5.1 Architecture Plan
+The project should continue to evolve through a data-driven Python backend with a thin presentation layer rather than moving technical rule logic into the UI.
+
+Planned component responsibilities:
+
+- `dvrs_tool/plan_data.py`: standard-plan definitions, regulatory overlays, and encoded policy assumptions
+- `dvrs_tool/engine.py`: deterministic evaluation of plan compatibility, range survival, pairing, and status classification
+- `dvrs_tool/api.py` and `dvrs_tool/models.py`: stable request/response contract for UI and automation clients
+- `dvrs_tool/static/`: user workflow, explanation display, and quote-draft interaction
+- `dvrs_tool/pdf_export.py`: generated ordering-summary output suitable for downstream quoting workflows
+- desktop packaging files: Windows delivery path for users who need an installed local executable
+
+Technology choices remain intentionally simple for the current scope:
+
+- Python for the rules engine and API
+- FastAPI for the local planning service
+- static HTML/CSS/JavaScript for the current browser UI
+- PySide6 WebEngine for the desktop wrapper
+- PyInstaller for Windows packaging
+
+This plan favors explainability, low operational complexity, and easy inspection over framework complexity or premature infrastructure work.
+
+### 5.2 MVP Definition
+The minimum viable product for the course project is the currently scoped 700/800 in-band planner that:
+
+- accepts the supported customer system inputs
+- evaluates the encoded standard plans
+- presents technical and regulatory outcomes with explanations
+- produces an ordering-summary style output
+- remains runnable locally in browser and desktop-wrapper form
+
+The following are stretch goals rather than MVP requirements:
+
+- VHF or UHF support
+- multiple live rulesets
+- scenario persistence
+- direct regulator or licensing-system integration
+- template-filled vendor PDF output
+
+## 6. Tasks
+
+Work should continue as small, testable increments that leave the project in a working state after each step.
+
+### 6.1 Ordered Task Sequence
+
+1. Stabilize and document the current 700/800 evaluation rules.
+   Acceptance criteria:
+   - the standard-plan dataset matches the approved project interpretation
+   - guarded plan-table changes remain intentional and reviewable
+   - regression tests cover the current parent-plan candidate sets and sub-range behavior
+
+2. Preserve explanation quality in API and UI outputs.
+   Acceptance criteria:
+   - invalid results include rule-based reasons
+   - technically valid results preserve regulatory notes and warnings
+   - quote-summary output reflects the same core recommendation shown in the plan results
+
+3. Harden mixed-band and exact-DVRS workflows.
+   Acceptance criteria:
+   - mixed-band evaluation uses the correct side-specific system inputs
+   - exact DVRS TX/RX values narrow or invalidate plans correctly
+   - tests cover the expected mixed-band and exact-input regressions
+
+4. Keep browser, CLI, PDF, and desktop workflows aligned.
+   Acceptance criteria:
+   - the shipped browser workflow remains runnable
+   - CLI and API outputs remain consistent with engine results
+   - PDF export remains available for valid quote-draft output
+   - Windows packaging remains buildable when shipped application behavior changes
+
+5. Add future scope only as explicitly bounded follow-on work.
+   Acceptance criteria:
+   - new band support or rulesets come with explicit scope boundaries
+   - plan data, engine logic, UI behavior, and tests are updated together
+   - the specification is updated before or alongside implementation
+
+## 7. Important Assumptions
 
 1. When the ordering guide and older narrative material differ, the approved newer project interpretation should control, especially for fixed plan ranges and sub-range recommendation behavior.
 2. The current product targets standard public-safety planning workflows for U.S. and Canadian users, not federal-only or specialized rail, utility, or other profiles.
 3. `COORDINATION_REQUIRED` is the correct default whenever the project cannot justify a stronger licensing conclusion.
 4. Future scope additions should extend the current data-driven Python engine rather than forcing rule logic into the UI.
 
-## 6. Germane Future Development Roadmap
+## 8. Germane Future Development Roadmap
 
 The following roadmap items are germane to the current product direction and should remain documented even though they are not yet implemented:
 
@@ -346,7 +461,7 @@ The following roadmap items are germane to the current product direction and sho
 - reintroduce VHF or UHF only as deliberate scoped projects with dedicated plan data, pairing logic, regulatory rules, and regression coverage
 - consider direct license-import integrations only after the core 700/800 planning workflow is stable and reviewable
 
-## 7. Research Notes and Source Basis
+## 9. Research Notes and Source Basis
 
 Primary bundled references:
 
