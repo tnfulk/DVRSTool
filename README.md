@@ -5,10 +5,20 @@
 - `dvrs_tool/engine.py`: calculation engine
 - `dvrs_tool/api.py`: FastAPI wrapper
 - `dvrs_tool/desktop.py`: embedded desktop launcher and packaged-runtime safeguards
+- `docs/salesperson-user-guide.md`: full salesperson-facing usage guide
+- `docs/salesperson-quick-reference.md`: short salesperson quick reference
 - `tests/test_engine.py`: engine, API, CLI, and PDF unit tests
 - `tests/test_desktop.py`: packaged desktop launcher regression tests
+- `tests/test_documentation.py`: documentation freshness and maintenance checks
 - `run_tests.py`: test runner
 - `requirements.txt`: API dependencies
+
+## Sales documentation
+
+- Full guide: `docs/salesperson-user-guide.md`
+- Quick reference: `docs/salesperson-quick-reference.md`
+
+These sales documents should be reviewed and updated during the documentation pass whenever changes to the tool affect supported workflow, inputs, outputs, statuses, or escalation guidance.
 
 ## Run tests
 
