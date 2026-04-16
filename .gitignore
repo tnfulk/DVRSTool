@@ -8,3 +8,5 @@ dist/
 dist-release/
 dist-release-*/
 *.spec.bak
+docs/DVRS_product_management_paper.md
+docs/DVRS_product_management_paper.rtf
