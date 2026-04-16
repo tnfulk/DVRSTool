@@ -3,6 +3,8 @@ __pycache__/
 .pytest_cache/
 build/
 build-release/
+build-release-*/
 dist/
 dist-release/
+dist-release-*/
 *.spec.bak

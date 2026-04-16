@@ -190,6 +190,8 @@ When the tool cannot find a technically valid plan, first confirm the informatio
 
 This guide and `docs/salesperson-quick-reference.md` should be reviewed during documentation passes whenever repository changes affect supported workflow, inputs, outputs, statuses, or escalation guidance.
 
+Documentation review for release `0.1.1`: the current web and packaged desktop experiences carry Motorola Solutions branding assets in the application header and icon surfaces, and the release handoff now uses versioned Windows build output folders, with no change to the planner workflow described above.
+
 Maintain the corresponding PDF exports in `docs/salesperson-user-guide.pdf` and `docs/salesperson-quick-reference.pdf` at the same time so the shared repo handoff materials stay current.
 
 The repo front page in `README.md` and the release handoff workflow in `docs/release-process.md` both treat these PDF companions as release-ready user documents when they are delivered alongside the Windows executable.
