@@ -1,0 +1,458 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R 4 0 R 5 0 R 6 0 R 7 0 R 8 0 R 9 0 R] /Count 7 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 10 0 R /F2 11 0 R >> >> /Contents 12 0 R >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 10 0 R /F2 11 0 R >> >> /Contents 13 0 R >>
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 10 0 R /F2 11 0 R >> >> /Contents 14 0 R >>
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 10 0 R /F2 11 0 R >> >> /Contents 15 0 R >>
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 10 0 R /F2 11 0 R >> >> /Contents 16 0 R >>
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 10 0 R /F2 11 0 R >> >> /Contents 17 0 R >>
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 10 0 R /F2 11 0 R >> >> /Contents 18 0 R >>
+endobj
+10 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+11 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+12 0 obj
+<< /Length 1530 >>
+stream
+q 0.050 0.150 0.270 rg 0.00 0.00 612.00 792.00 re f Q
+q 0.000 0.430 0.690 rg 0.00 180.00 612.00 18.00 re f Q
+q 0.030 0.100 0.190 rg 494.00 0.00 118.00 792.00 re f Q
+q 0.870 0.930 0.970 rg 54.00 148.00 160.00 6.00 re f Q
+q 0.700 0.770 0.830 RG 1.00 w 54.00 520.00 158.00 88.00 re S Q
+BT /F2 34 Tf 1.000 1.000 1.000 rg 1 0 0 1 54.00 650.00 Tm (DVRS Planner) Tj ET
+BT /F2 22 Tf 1.000 1.000 1.000 rg 1 0 0 1 54.00 612.00 Tm (Salesperson User Guide) Tj ET
+BT /F1 12 Tf 0.870 0.930 0.970 rg 1 0 0 1 54.00 575.00 Tm (Motorola Solutions sales documentation) Tj ET
+BT /F1 10 Tf 0.870 0.930 0.970 rg 1 0 0 1 66.00 586.00 Tm (Ordering guide style companion) Tj ET
+BT /F1 10 Tf 0.870 0.930 0.970 rg 1 0 0 1 66.00 572.00 Tm (For salesperson use) Tj ET
+BT /F2 10 Tf 1.000 1.000 1.000 rg 1 0 0 1 66.00 552.00 Tm (Revision) Tj ET
+BT /F1 10 Tf 1.000 1.000 1.000 rg 1 0 0 1 128.00 552.00 Tm (2026-04-15) Tj ET
+BT /F2 10 Tf 1.000 1.000 1.000 rg 1 0 0 1 66.00 534.00 Tm (Document) Tj ET
+BT /F1 10 Tf 1.000 1.000 1.000 rg 1 0 0 1 128.00 534.00 Tm (salesperson-user-guide) Tj ET
+BT /F1 10 Tf 1.000 1.000 1.000 rg 1 0 0 1 54.00 130.00 Tm (Source document: salesperson-user-guide.md) Tj ET
+BT /F1 10 Tf 1.000 1.000 1.000 rg 1 0 0 1 54.00 112.00 Tm (Revision generated from repo state: 2026-04-15) Tj ET
+BT /F1 12 Tf 0.870 0.930 0.970 rg 1 0 0 1 54.00 76.00 Tm (DVRS Planner User Guide for Sales) Tj ET
+BT /F2 12 Tf 1.000 1.000 1.000 rg 1 0 0 1 526.00 710.00 Tm (Motorola) Tj ET
+BT /F2 12 Tf 1.000 1.000 1.000 rg 1 0 0 1 512.00 694.00 Tm (Solutions) Tj ET
+endstream
+endobj
+13 0 obj
+<< /Length 3170 >>
+stream
+q 0.050 0.150 0.270 rg 0.00 744.00 612.00 48.00 re f Q
+BT /F2 20 Tf 1.000 1.000 1.000 rg 1 0 0 1 54.00 762.00 Tm (Table of Contents) Tj ET
+BT /F1 10 Tf 0.870 0.930 0.970 rg 1 0 0 1 392.00 764.00 Tm (Sales Documentation) Tj ET
+BT /F2 8 Tf 0.700 0.770 0.830 rg 1 0 0 1 502.00 750.00 Tm (DVRS Planner) Tj ET
+q 0.000 0.430 0.690 rg 54.00 678.00 18.00 18.00 re f Q
+BT /F2 9 Tf 1.000 1.000 1.000 rg 1 0 0 1 59.00 683.00 Tm (1) Tj ET
+BT /F1 11 Tf 0.120 0.120 0.120 rg 1 0 0 1 82.00 684.00 Tm (Purpose) Tj ET
+q 0.000 0.430 0.690 rg 54.00 657.00 18.00 18.00 re f Q
+BT /F2 9 Tf 1.000 1.000 1.000 rg 1 0 0 1 59.00 662.00 Tm (2) Tj ET
+BT /F1 11 Tf 0.120 0.120 0.120 rg 1 0 0 1 82.00 663.00 Tm (Source Basis) Tj ET
+q 0.000 0.430 0.690 rg 54.00 636.00 18.00 18.00 re f Q
+BT /F2 9 Tf 1.000 1.000 1.000 rg 1 0 0 1 59.00 641.00 Tm (3) Tj ET
+BT /F1 11 Tf 0.120 0.120 0.120 rg 1 0 0 1 82.00 642.00 Tm (What The Tool Covers) Tj ET
+q 0.000 0.430 0.690 rg 54.00 615.00 18.00 18.00 re f Q
+BT /F2 9 Tf 1.000 1.000 1.000 rg 1 0 0 1 59.00 620.00 Tm (4) Tj ET
+BT /F1 11 Tf 0.120 0.120 0.120 rg 1 0 0 1 82.00 621.00 Tm (When To Use This Tool) Tj ET
+q 0.000 0.430 0.690 rg 54.00 594.00 18.00 18.00 re f Q
+BT /F2 9 Tf 1.000 1.000 1.000 rg 1 0 0 1 59.00 599.00 Tm (5) Tj ET
+BT /F1 11 Tf 0.120 0.120 0.120 rg 1 0 0 1 82.00 600.00 Tm (Information You Should Gather First) Tj ET
+q 0.000 0.430 0.690 rg 54.00 573.00 18.00 18.00 re f Q
+BT /F2 9 Tf 1.000 1.000 1.000 rg 1 0 0 1 59.00 578.00 Tm (6) Tj ET
+BT /F1 11 Tf 0.120 0.120 0.120 rg 1 0 0 1 82.00 579.00 Tm (Basic Workflow) Tj ET
+q 0.000 0.430 0.690 rg 54.00 552.00 18.00 18.00 re f Q
+BT /F2 9 Tf 1.000 1.000 1.000 rg 1 0 0 1 59.00 557.00 Tm (7) Tj ET
+BT /F1 11 Tf 0.120 0.120 0.120 rg 1 0 0 1 82.00 558.00 Tm (How To Read The Results) Tj ET
+q 0.000 0.430 0.690 rg 54.00 531.00 18.00 18.00 re f Q
+BT /F2 9 Tf 1.000 1.000 1.000 rg 1 0 0 1 59.00 536.00 Tm (8) Tj ET
+BT /F1 11 Tf 0.120 0.120 0.120 rg 1 0 0 1 82.00 537.00 Tm (Recommended Salesperson Workflow) Tj ET
+q 0.000 0.430 0.690 rg 54.00 510.00 18.00 18.00 re f Q
+BT /F2 9 Tf 1.000 1.000 1.000 rg 1 0 0 1 59.00 515.00 Tm (9) Tj ET
+BT /F1 11 Tf 0.120 0.120 0.120 rg 1 0 0 1 82.00 516.00 Tm (Common Mistakes To Avoid) Tj ET
+q 0.000 0.430 0.690 rg 54.00 489.00 18.00 18.00 re f Q
+BT /F2 9 Tf 1.000 1.000 1.000 rg 1 0 0 1 59.00 494.00 Tm (10) Tj ET
+BT /F1 11 Tf 0.120 0.120 0.120 rg 1 0 0 1 82.00 495.00 Tm (How To Use The Quote Draft) Tj ET
+q 0.000 0.430 0.690 rg 54.00 468.00 18.00 18.00 re f Q
+BT /F2 9 Tf 1.000 1.000 1.000 rg 1 0 0 1 59.00 473.00 Tm (11) Tj ET
+BT /F1 11 Tf 0.120 0.120 0.120 rg 1 0 0 1 82.00 474.00 Tm (What To Say Externally) Tj ET
+q 0.000 0.430 0.690 rg 54.00 447.00 18.00 18.00 re f Q
+BT /F2 9 Tf 1.000 1.000 1.000 rg 1 0 0 1 59.00 452.00 Tm (12) Tj ET
+BT /F1 11 Tf 0.120 0.120 0.120 rg 1 0 0 1 82.00 453.00 Tm (Summary) Tj ET
+q 0.000 0.430 0.690 rg 54.00 426.00 18.00 18.00 re f Q
+BT /F2 9 Tf 1.000 1.000 1.000 rg 1 0 0 1 59.00 431.00 Tm (13) Tj ET
+BT /F1 11 Tf 0.120 0.120 0.120 rg 1 0 0 1 82.00 432.00 Tm (Maintenance Note) Tj ET
+BT /F1 10 Tf 0.400 0.460 0.520 rg 1 0 0 1 54.00 90.00 Tm (These PDFs are generated from the maintained markdown guides in this repository.) Tj ET
+endstream
+endobj
+14 0 obj
+<< /Length 5996 >>
+stream
+q 0.050 0.150 0.270 rg 0.00 744.00 612.00 48.00 re f Q
+BT /F2 20 Tf 1.000 1.000 1.000 rg 1 0 0 1 54.00 762.00 Tm (DVRS Planner User Guide for Sales) Tj ET
+BT /F1 10 Tf 0.870 0.930 0.970 rg 1 0 0 1 392.00 764.00 Tm (Salesperson User Guide) Tj ET
+BT /F2 8 Tf 0.700 0.770 0.830 rg 1 0 0 1 502.00 750.00 Tm (DVRS Planner) Tj ET
+q 0.000 0.430 0.690 RG 1.20 w 54.00 730.00 m 558.00 730.00 l S Q
+q 0.700 0.770 0.830 RG 0.80 w 54.00 42.00 m 558.00 42.00 l S Q
+BT /F1 9 Tf 0.400 0.460 0.520 rg 1 0 0 1 54.00 28.00 Tm (Motorola Solutions DVRS Planner) Tj ET
+BT /F1 9 Tf 0.400 0.460 0.520 rg 1 0 0 1 522.00 28.00 Tm (Page 1) Tj ET
+q 0.870 0.930 0.970 rg 54.00 702.00 504.00 20.00 re f Q
+BT /F2 13 Tf 0.050 0.150 0.270 rg 1 0 0 1 62.00 708.00 Tm (Purpose) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 682.00 Tm (This guide explains how a salesperson should use the DVRS Planner to screen standard Motorola) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 668.00 Tm (Solutions DVR-LX in-band DVRS options for a customer opportunity.) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 648.00 Tm (The tool is intended to help you:) Tj ET
+q 0.000 0.430 0.690 rg 62.00 625.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 628.00 Tm (enter the customer system frequencies that already exist) Tj ET
+q 0.000 0.430 0.690 rg 62.00 609.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 612.00 Tm (identify which standard plans appear technically valid) Tj ET
+q 0.000 0.430 0.690 rg 62.00 593.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 596.00 Tm (see when a result is likely to require coordination or additional engineering review) Tj ET
+q 0.000 0.430 0.690 rg 62.00 577.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 580.00 Tm (produce an ordering-summary style output that supports quoting and internal follow-up) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 564.00 Tm (The tool is not a final authority on licensing, coordination, or custom engineering approval.) Tj ET
+q 0.870 0.930 0.970 rg 54.00 536.00 504.00 20.00 re f Q
+BT /F2 13 Tf 0.050 0.150 0.270 rg 1 0 0 1 62.00 542.00 Tm (Source Basis) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 516.00 Tm (The current planner workflow is based primarily on these bundled project references:) Tj ET
+q 0.000 0.430 0.690 rg 62.00 493.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 496.00 Tm (dvr-lx-ordering-guide-1 \(1\).pdf) Tj ET
+q 0.000 0.430 0.690 rg 62.00 477.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 480.00 Tm (Introduction to  In-Band Operation-v1_2019-06-19.pdf) Tj ET
+q 0.000 0.430 0.690 rg 62.00 461.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 464.00 Tm (supplemental-ordering-form-b2bf88f7.pdf) Tj ET
+q 0.000 0.430 0.690 rg 62.00 445.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 448.00 Tm (dvrs-web-app-design.md) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 432.00 Tm (The development history in docs/dev-log.md and docs/dev-history/ further explains how the) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 418.00 Tm (current planning rules and workflow were implemented.) Tj ET
+q 0.870 0.930 0.970 rg 54.00 390.00 504.00 20.00 re f Q
+BT /F2 13 Tf 0.050 0.150 0.270 rg 1 0 0 1 62.00 396.00 Tm (What The Tool Covers) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 370.00 Tm (The current release is focused on standard in-band DVRS planning for:) Tj ET
+q 0.000 0.430 0.690 rg 62.00 347.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 350.00 Tm (United States) Tj ET
+q 0.000 0.430 0.690 rg 62.00 331.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 334.00 Tm (Canada) Tj ET
+q 0.000 0.430 0.690 rg 62.00 315.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 318.00 Tm (700 only system frequency configurations) Tj ET
+q 0.000 0.430 0.690 rg 62.00 299.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 302.00 Tm (800 only system frequency configurations) Tj ET
+q 0.000 0.430 0.690 rg 62.00 283.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 286.00 Tm (mixed 700 and 800 system frequency configurations) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 270.00 Tm (The current release does not provide active VHF or UHF planning support, direct regulator) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 256.00 Tm (lookup, automatic licensing approval, or custom filter-plan design.) Tj ET
+q 0.870 0.930 0.970 rg 54.00 228.00 504.00 20.00 re f Q
+BT /F2 13 Tf 0.050 0.150 0.270 rg 1 0 0 1 62.00 234.00 Tm (When To Use This Tool) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 208.00 Tm (Use the DVRS Planner when you need an early answer to questions such as:) Tj ET
+q 0.000 0.430 0.690 rg 62.00 185.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 188.00 Tm ("Which standard DVRS plans are worth discussing for this customer?") Tj ET
+q 0.000 0.430 0.690 rg 62.00 169.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 172.00 Tm ("Does the customer's current system frequency layout appear compatible with a standard) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 158.00 Tm (plan?") Tj ET
+q 0.000 0.430 0.690 rg 62.00 139.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 142.00 Tm ("Do we appear to have a straightforward standard recommendation, or do we need engineering) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 128.00 Tm (support?") Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 112.00 Tm (This is a planning and qualification tool. It helps narrow the conversation, but it does not) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 98.00 Tm (replace Motorola Solutions presales engineering review, regulatory coordination, or final) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 84.00 Tm (design approval.) Tj ET
+endstream
+endobj
+15 0 obj
+<< /Length 6030 >>
+stream
+q 0.050 0.150 0.270 rg 0.00 744.00 612.00 48.00 re f Q
+BT /F2 20 Tf 1.000 1.000 1.000 rg 1 0 0 1 54.00 762.00 Tm (DVRS Planner User Guide for Sales) Tj ET
+BT /F1 10 Tf 0.870 0.930 0.970 rg 1 0 0 1 392.00 764.00 Tm (Salesperson User Guide) Tj ET
+BT /F2 8 Tf 0.700 0.770 0.830 rg 1 0 0 1 502.00 750.00 Tm (DVRS Planner) Tj ET
+q 0.000 0.430 0.690 RG 1.20 w 54.00 730.00 m 558.00 730.00 l S Q
+q 0.700 0.770 0.830 RG 0.80 w 54.00 42.00 m 558.00 42.00 l S Q
+BT /F1 9 Tf 0.400 0.460 0.520 rg 1 0 0 1 54.00 28.00 Tm (Motorola Solutions DVRS Planner) Tj ET
+BT /F1 9 Tf 0.400 0.460 0.520 rg 1 0 0 1 522.00 28.00 Tm (Page 2) Tj ET
+q 0.870 0.930 0.970 rg 54.00 702.00 504.00 20.00 re f Q
+BT /F2 13 Tf 0.050 0.150 0.270 rg 1 0 0 1 62.00 708.00 Tm (Information You Should Gather First) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 682.00 Tm (Before running the tool, collect the most accurate customer information you can. The output) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 668.00 Tm (quality depends heavily on the quality of the input.) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 648.00 Tm (At minimum, confirm:) Tj ET
+q 0.000 0.430 0.690 rg 62.00 625.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 628.00 Tm (country: United States or Canada) Tj ET
+q 0.000 0.430 0.690 rg 62.00 609.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 612.00 Tm (whether the customer system is 700 only, 800 only, or 700 and 800) Tj ET
+q 0.000 0.430 0.690 rg 62.00 593.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 596.00 Tm (the customer's existing Mobile TX Frequency low and high values for the applicable band or) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 582.00 Tm (bands) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 566.00 Tm (If available, also collect:) Tj ET
+q 0.000 0.430 0.690 rg 62.00 543.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 546.00 Tm (exact proposed or existing DVRS TX and DVRS RX) Tj ET
+q 0.000 0.430 0.690 rg 62.00 527.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 530.00 Tm (agency name) Tj ET
+q 0.000 0.430 0.690 rg 62.00 511.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 514.00 Tm (quote date) Tj ET
+q 0.000 0.430 0.690 rg 62.00 495.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 498.00 Tm (mobile radio type) Tj ET
+q 0.000 0.430 0.690 rg 62.00 479.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 482.00 Tm (control head type) Tj ET
+q 0.000 0.430 0.690 rg 62.00 463.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 466.00 Tm (MSU antenna type) Tj ET
+q 0.000 0.430 0.690 rg 62.00 447.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 450.00 Tm (any agency notes that may matter for quoting or engineering review) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 434.00 Tm (If you are unsure whether the customer frequencies are accurate, pause and verify them before) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 420.00 Tm (relying on the result.) Tj ET
+q 0.870 0.930 0.970 rg 54.00 392.00 504.00 20.00 re f Q
+BT /F2 13 Tf 0.050 0.150 0.270 rg 1 0 0 1 62.00 398.00 Tm (Basic Workflow) Tj ET
+BT /F2 10 Tf 0.000 0.430 0.690 rg 1 0 0 1 54.00 372.00 Tm (1.) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 78.00 372.00 Tm (Open the DVRS Planner web or desktop application.) Tj ET
+BT /F2 10 Tf 0.000 0.430 0.690 rg 1 0 0 1 54.00 356.00 Tm (2.) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 78.00 356.00 Tm (Select the country.) Tj ET
+BT /F2 10 Tf 0.000 0.430 0.690 rg 1 0 0 1 54.00 340.00 Tm (3.) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 78.00 340.00 Tm (Select the system frequency configuration:) Tj ET
+q 0.000 0.430 0.690 rg 76.00 321.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 86.00 324.00 Tm (700 only) Tj ET
+q 0.000 0.430 0.690 rg 76.00 305.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 86.00 308.00 Tm (800 only) Tj ET
+q 0.000 0.430 0.690 rg 76.00 289.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 86.00 292.00 Tm (700 and 800) Tj ET
+BT /F2 10 Tf 0.000 0.430 0.690 rg 1 0 0 1 54.00 276.00 Tm (4.) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 78.00 276.00 Tm (Enter the customer's existing Mobile TX Frequency range for the relevant band or bands.) Tj ET
+BT /F2 10 Tf 0.000 0.430 0.690 rg 1 0 0 1 54.00 260.00 Tm (5.) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 78.00 260.00 Tm (Add optional exact DVRS TX and DVRS RX values only if you already know them and want the) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 78.00 246.00 Tm (planner to test that exact setup.) Tj ET
+BT /F2 10 Tf 0.000 0.430 0.690 rg 1 0 0 1 54.00 230.00 Tm (6.) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 78.00 230.00 Tm (Add optional quote details if you want the ordering summary to be more complete.) Tj ET
+BT /F2 10 Tf 0.000 0.430 0.690 rg 1 0 0 1 54.00 214.00 Tm (7.) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 78.00 214.00 Tm (Run the evaluation.) Tj ET
+BT /F2 10 Tf 0.000 0.430 0.690 rg 1 0 0 1 54.00 198.00 Tm (8.) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 78.00 198.00 Tm (Review the System, Plans, and Quote Draft sections together before making a) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 78.00 184.00 Tm (recommendation.) Tj ET
+q 0.870 0.930 0.970 rg 54.00 160.00 504.00 20.00 re f Q
+BT /F2 13 Tf 0.050 0.150 0.270 rg 1 0 0 1 62.00 166.00 Tm (How To Read The Results) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 140.00 Tm (The planner separates technical fit from regulatory confidence. That distinction matters.) Tj ET
+BT /F2 11 Tf 0.000 0.430 0.690 rg 1 0 0 1 54.00 120.00 Tm (Technical Status) Tj ET
+q 0.000 0.430 0.690 RG 1.20 w 54.00 116.00 m 194.00 116.00 l S Q
+q 0.000 0.430 0.690 rg 62.00 97.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 100.00 Tm (TECHNICALLY_VALID: the encoded standard-plan rules found a compliant technical fit) Tj ET
+endstream
+endobj
+16 0 obj
+<< /Length 6762 >>
+stream
+q 0.050 0.150 0.270 rg 0.00 744.00 612.00 48.00 re f Q
+BT /F2 20 Tf 1.000 1.000 1.000 rg 1 0 0 1 54.00 762.00 Tm (DVRS Planner User Guide for Sales) Tj ET
+BT /F1 10 Tf 0.870 0.930 0.970 rg 1 0 0 1 392.00 764.00 Tm (Salesperson User Guide) Tj ET
+BT /F2 8 Tf 0.700 0.770 0.830 rg 1 0 0 1 502.00 750.00 Tm (DVRS Planner) Tj ET
+q 0.000 0.430 0.690 RG 1.20 w 54.00 730.00 m 558.00 730.00 l S Q
+q 0.700 0.770 0.830 RG 0.80 w 54.00 42.00 m 558.00 42.00 l S Q
+BT /F1 9 Tf 0.400 0.460 0.520 rg 1 0 0 1 54.00 28.00 Tm (Motorola Solutions DVRS Planner) Tj ET
+BT /F1 9 Tf 0.400 0.460 0.520 rg 1 0 0 1 522.00 28.00 Tm (Page 3) Tj ET
+q 0.000 0.430 0.690 rg 62.00 707.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 710.00 Tm (TECHNICALLY_INVALID: the planner could not find a compliant technical fit for that standard) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 696.00 Tm (plan) Tj ET
+BT /F2 11 Tf 0.000 0.430 0.690 rg 1 0 0 1 54.00 680.00 Tm (Regulatory Status) Tj ET
+q 0.000 0.430 0.690 RG 1.20 w 54.00 676.00 m 194.00 676.00 l S Q
+q 0.000 0.430 0.690 rg 62.00 657.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 660.00 Tm (LIKELY_LICENSABLE: the result appears to align with the encoded country-specific guidance) Tj ET
+q 0.000 0.430 0.690 rg 62.00 641.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 644.00 Tm (COORDINATION_REQUIRED: the result may still be possible, but additional review or) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 630.00 Tm (coordination is needed) Tj ET
+q 0.000 0.430 0.690 rg 62.00 611.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 614.00 Tm (LIKELY_NOT_LICENSABLE: the result appears unlikely to succeed under the encoded guidance) Tj ET
+q 0.000 0.430 0.690 rg 62.00 595.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 598.00 Tm (NOT_EVALUATED: the planner did not make a regulatory determination for that case) Tj ET
+BT /F2 11 Tf 0.000 0.430 0.690 rg 1 0 0 1 54.00 582.00 Tm (Practical Sales Reading) Tj ET
+q 0.000 0.430 0.690 RG 1.20 w 54.00 578.00 m 194.00 578.00 l S Q
+q 0.000 0.430 0.690 rg 62.00 559.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 562.00 Tm (A technically valid result gives you a candidate standard path to discuss.) Tj ET
+q 0.000 0.430 0.690 rg 62.00 543.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 546.00 Tm (A coordination-required result is not a stop sign. It means the opportunity probably needs) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 532.00 Tm (additional technical or regulatory review before you treat it as straightforward.) Tj ET
+q 0.000 0.430 0.690 rg 62.00 513.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 516.00 Tm (A technically invalid result means the tested standard plan should not be presented as a) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 502.00 Tm (clean fit based on the information currently entered.) Tj ET
+q 0.870 0.930 0.970 rg 54.00 478.00 504.00 20.00 re f Q
+BT /F2 13 Tf 0.050 0.150 0.270 rg 1 0 0 1 62.00 484.00 Tm (Recommended Salesperson Workflow) Tj ET
+BT /F2 11 Tf 0.000 0.430 0.690 rg 1 0 0 1 54.00 458.00 Tm (If One Or More Standard Plans Are Technically Valid) Tj ET
+q 0.000 0.430 0.690 RG 1.20 w 54.00 454.00 m 194.00 454.00 l S Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 438.00 Tm (Use the result to guide the next internal and customer conversation:) Tj ET
+q 0.000 0.430 0.690 rg 62.00 415.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 418.00 Tm (identify the technically valid standard plan candidates) Tj ET
+q 0.000 0.430 0.690 rg 62.00 399.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 402.00 Tm (note any warnings or coordination-related messages) Tj ET
+q 0.000 0.430 0.690 rg 62.00 383.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 386.00 Tm (capture the proposed DVRS TX and DVRS RX shown by the planner) Tj ET
+q 0.000 0.430 0.690 rg 62.00 367.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 370.00 Tm (use the Quote Draft summary and PDF export to support quote preparation and internal review) Tj ET
+q 0.000 0.430 0.690 rg 62.00 351.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 354.00 Tm (avoid describing the result as final licensing approval) Tj ET
+BT /F2 11 Tf 0.000 0.430 0.690 rg 1 0 0 1 54.00 338.00 Tm (If The Tool Shows Only `COORDINATION_REQUIRED` Regulatory Outcomes) Tj ET
+q 0.000 0.430 0.690 RG 1.20 w 54.00 334.00 m 194.00 334.00 l S Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 318.00 Tm (Treat the result as a qualified lead, not a final answer.) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 298.00 Tm (Your next step should usually be to:) Tj ET
+q 0.000 0.430 0.690 rg 62.00 275.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 278.00 Tm (keep the technically valid candidate in scope) Tj ET
+q 0.000 0.430 0.690 rg 62.00 259.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 262.00 Tm (note that coordination or additional review is still required) Tj ET
+q 0.000 0.430 0.690 rg 62.00 243.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 246.00 Tm (involve Motorola Solutions presales engineering if the opportunity needs confirmation) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 232.00 Tm (before quoting) Tj ET
+BT /F2 11 Tf 0.000 0.430 0.690 rg 1 0 0 1 54.00 216.00 Tm (If The Tool Cannot Find A Technically Valid Plan) Tj ET
+q 0.000 0.430 0.690 RG 1.20 w 54.00 212.00 m 194.00 212.00 l S Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 196.00 Tm (Do not assume the opportunity is dead based on the first pass.) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 176.00 Tm (Follow this sequence:) Tj ET
+BT /F2 10 Tf 0.000 0.430 0.690 rg 1 0 0 1 54.00 156.00 Tm (1.) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 78.00 156.00 Tm (Confirm that the information provided is accurate.) Tj ET
+BT /F2 10 Tf 0.000 0.430 0.690 rg 1 0 0 1 54.00 140.00 Tm (2.) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 78.00 140.00 Tm (Re-check the country, band selection, and entered customer system frequencies.) Tj ET
+BT /F2 10 Tf 0.000 0.430 0.690 rg 1 0 0 1 54.00 124.00 Tm (3.) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 78.00 124.00 Tm (If exact DVRS TX and DVRS RX were entered, confirm those values are correct and intended.) Tj ET
+BT /F2 10 Tf 0.000 0.430 0.690 rg 1 0 0 1 54.00 108.00 Tm (4.) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 78.00 108.00 Tm (After confirming the information, contact Motorola Solutions presales engineering for) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 78.00 94.00 Tm (additional support.) Tj ET
+endstream
+endobj
+17 0 obj
+<< /Length 6309 >>
+stream
+q 0.050 0.150 0.270 rg 0.00 744.00 612.00 48.00 re f Q
+BT /F2 20 Tf 1.000 1.000 1.000 rg 1 0 0 1 54.00 762.00 Tm (DVRS Planner User Guide for Sales) Tj ET
+BT /F1 10 Tf 0.870 0.930 0.970 rg 1 0 0 1 392.00 764.00 Tm (Salesperson User Guide) Tj ET
+BT /F2 8 Tf 0.700 0.770 0.830 rg 1 0 0 1 502.00 750.00 Tm (DVRS Planner) Tj ET
+q 0.000 0.430 0.690 RG 1.20 w 54.00 730.00 m 558.00 730.00 l S Q
+q 0.700 0.770 0.830 RG 0.80 w 54.00 42.00 m 558.00 42.00 l S Q
+BT /F1 9 Tf 0.400 0.460 0.520 rg 1 0 0 1 54.00 28.00 Tm (Motorola Solutions DVRS Planner) Tj ET
+BT /F1 9 Tf 0.400 0.460 0.520 rg 1 0 0 1 522.00 28.00 Tm (Page 4) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 710.00 Tm (Motorola Solutions presales engineering may involve the DVRS product management and development) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 696.00 Tm (engineering teams to:) Tj ET
+q 0.000 0.430 0.690 rg 62.00 673.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 676.00 Tm (make additional recommendations) Tj ET
+q 0.000 0.430 0.690 rg 62.00 657.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 660.00 Tm (validate a custom design for that customer) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 644.00 Tm (This escalation path is especially important when:) Tj ET
+q 0.000 0.430 0.690 rg 62.00 621.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 624.00 Tm (the customer may need something outside a standard plan) Tj ET
+q 0.000 0.430 0.690 rg 62.00 605.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 608.00 Tm (the source frequency information may be incomplete or inconsistent) Tj ET
+q 0.000 0.430 0.690 rg 62.00 589.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 592.00 Tm (the opportunity appears close to a workable design but the tool still rejects all standard) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 578.00 Tm (options) Tj ET
+q 0.000 0.430 0.690 rg 62.00 559.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 562.00 Tm (the customer wants a custom or highly constrained solution) Tj ET
+q 0.870 0.930 0.970 rg 54.00 538.00 504.00 20.00 re f Q
+BT /F2 13 Tf 0.050 0.150 0.270 rg 1 0 0 1 62.00 544.00 Tm (Common Mistakes To Avoid) Tj ET
+q 0.000 0.430 0.690 rg 62.00 515.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 518.00 Tm (Do not enter desired DVRS frequencies in place of the customer's existing system) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 504.00 Tm (frequencies unless the workflow specifically asks for exact DVRS TX and DVRS RX.) Tj ET
+q 0.000 0.430 0.690 rg 62.00 485.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 488.00 Tm (Do not treat a technically valid result as automatic licensing approval.) Tj ET
+q 0.000 0.430 0.690 rg 62.00 469.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 472.00 Tm (Do not assume a technically invalid result means there is no possible path forward without) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 458.00 Tm (first verifying the inputs.) Tj ET
+q 0.000 0.430 0.690 rg 62.00 439.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 442.00 Tm (Do not promise a custom solution unless Motorola Solutions presales engineering has) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 428.00 Tm (reviewed it.) Tj ET
+q 0.000 0.430 0.690 rg 62.00 409.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 412.00 Tm (Do not overlook warnings, coordination notes, or rule-based failure reasons in the result) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 398.00 Tm (cards.) Tj ET
+q 0.870 0.930 0.970 rg 54.00 374.00 504.00 20.00 re f Q
+BT /F2 13 Tf 0.050 0.150 0.270 rg 1 0 0 1 62.00 380.00 Tm (How To Use The Quote Draft) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 354.00 Tm (The Quote Draft section is designed to support internal sales and quoting workflows.) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 334.00 Tm (Use it to:) Tj ET
+q 0.000 0.430 0.690 rg 62.00 311.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 314.00 Tm (capture the customer system summary) Tj ET
+q 0.000 0.430 0.690 rg 62.00 295.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 298.00 Tm (capture the proposed DVRS frequencies from the selected plan) Tj ET
+q 0.000 0.430 0.690 rg 62.00 279.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 282.00 Tm (preserve optional opportunity details such as agency name and radio/control-head selections) Tj ET
+q 0.000 0.430 0.690 rg 62.00 263.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 266.00 Tm (export a PDF summary for internal circulation or quote preparation) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 250.00 Tm (The generated PDF is an ordering-summary style document. It is useful for planning and) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 236.00 Tm (communication, but it is not a final approved Motorola Solutions ordering artifact by itself.) Tj ET
+q 0.870 0.930 0.970 rg 54.00 208.00 504.00 20.00 re f Q
+BT /F2 13 Tf 0.050 0.150 0.270 rg 1 0 0 1 62.00 214.00 Tm (What To Say Externally) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 188.00 Tm (The safest external positioning is:) Tj ET
+q 0.000 0.430 0.690 rg 62.00 165.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 168.00 Tm (the planner identified standard options that appear technically compatible based on the) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 154.00 Tm (information provided) Tj ET
+q 0.000 0.430 0.690 rg 62.00 135.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 138.00 Tm (some cases may still require coordination or engineering confirmation) Tj ET
+q 0.000 0.430 0.690 rg 62.00 119.00 4.00 4.00 re f Q
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 122.00 Tm (if a standard configuration cannot be confirmed from the current inputs, Motorola Solutions) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 108.00 Tm (presales engineering can review the opportunity and determine whether additional) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 72.00 94.00 Tm (recommendations or a custom design review are appropriate) Tj ET
+endstream
+endobj
+18 0 obj
+<< /Length 3039 >>
+stream
+q 0.050 0.150 0.270 rg 0.00 744.00 612.00 48.00 re f Q
+BT /F2 20 Tf 1.000 1.000 1.000 rg 1 0 0 1 54.00 762.00 Tm (DVRS Planner User Guide for Sales) Tj ET
+BT /F1 10 Tf 0.870 0.930 0.970 rg 1 0 0 1 392.00 764.00 Tm (Salesperson User Guide) Tj ET
+BT /F2 8 Tf 0.700 0.770 0.830 rg 1 0 0 1 502.00 750.00 Tm (DVRS Planner) Tj ET
+q 0.000 0.430 0.690 RG 1.20 w 54.00 730.00 m 558.00 730.00 l S Q
+q 0.700 0.770 0.830 RG 0.80 w 54.00 42.00 m 558.00 42.00 l S Q
+BT /F1 9 Tf 0.400 0.460 0.520 rg 1 0 0 1 54.00 28.00 Tm (Motorola Solutions DVRS Planner) Tj ET
+BT /F1 9 Tf 0.400 0.460 0.520 rg 1 0 0 1 522.00 28.00 Tm (Page 5) Tj ET
+q 0.870 0.930 0.970 rg 54.00 702.00 504.00 20.00 re f Q
+BT /F2 13 Tf 0.050 0.150 0.270 rg 1 0 0 1 62.00 708.00 Tm (Summary) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 682.00 Tm (The DVRS Planner helps sales quickly screen standard DVR-LX in-band opportunities, organize the) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 668.00 Tm (result, and decide when to escalate.) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 648.00 Tm (Use it to narrow the conversation, not to replace engineering judgment.) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 628.00 Tm (When the tool cannot find a technically valid plan, first confirm the information is accurate,) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 614.00 Tm (then contact Motorola Solutions presales engineering. That team may bring in DVRS product) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 600.00 Tm (management and development engineering to recommend next steps or validate a customer-specific) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 586.00 Tm (design.) Tj ET
+q 0.870 0.930 0.970 rg 54.00 558.00 504.00 20.00 re f Q
+BT /F2 13 Tf 0.050 0.150 0.270 rg 1 0 0 1 62.00 564.00 Tm (Maintenance Note) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 538.00 Tm (This guide and docs/salesperson-quick-reference.md should be reviewed during documentation) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 524.00 Tm (passes whenever repository changes affect supported workflow, inputs, outputs, statuses, or) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 510.00 Tm (escalation guidance.) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 490.00 Tm (Maintain the corresponding PDF exports in docs/salesperson-user-guide.pdf and) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 476.00 Tm (docs/salesperson-quick-reference.pdf at the same time so the shared repo handoff materials stay) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 462.00 Tm (current.) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 442.00 Tm (The repo front page in README.md and the release handoff workflow in docs/release-process.md) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 428.00 Tm (both treat these PDF companions as release-ready user documents when they are delivered) Tj ET
+BT /F1 10 Tf 0.120 0.120 0.120 rg 1 0 0 1 54.00 414.00 Tm (alongside the Windows executable.) Tj ET
+endstream
+endobj
+xref
+0 19
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000157 00000 n 
+0000000296 00000 n 
+0000000435 00000 n 
+0000000574 00000 n 
+0000000713 00000 n 
+0000000852 00000 n 
+0000000991 00000 n 
+0000001130 00000 n 
+0000001201 00000 n 
+0000001277 00000 n 
+0000002860 00000 n 
+0000006083 00000 n 
+0000012132 00000 n 
+0000018215 00000 n 
+0000025030 00000 n 
+0000031392 00000 n 
+trailer
+<< /Size 19 /Root 1 0 R >>
+startxref
+34484
+%%EOF

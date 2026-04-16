@@ -5,11 +5,16 @@ from __future__ import annotations
 import unittest
 from pathlib import Path
 
+from pypdf import PdfReader
+
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DOCS_DIR = REPO_ROOT / "docs"
 FULL_GUIDE = DOCS_DIR / "salesperson-user-guide.md"
 QUICK_REFERENCE = DOCS_DIR / "salesperson-quick-reference.md"
+FULL_GUIDE_PDF = DOCS_DIR / "salesperson-user-guide.pdf"
+QUICK_REFERENCE_PDF = DOCS_DIR / "salesperson-quick-reference.pdf"
+PDF_GENERATOR = REPO_ROOT / "tools" / "generate_sales_doc_pdfs.py"
 
 TOOL_IMPACT_PATHS = [
     REPO_ROOT / "README.md",
@@ -33,6 +38,8 @@ class SalesDocumentationTests(unittest.TestCase):
     def test_sales_guides_exist(self) -> None:
         self.assertTrue(FULL_GUIDE.exists(), f"Missing full sales guide: {FULL_GUIDE}")
         self.assertTrue(QUICK_REFERENCE.exists(), f"Missing sales quick reference: {QUICK_REFERENCE}")
+        self.assertTrue(FULL_GUIDE_PDF.exists(), f"Missing full sales guide PDF: {FULL_GUIDE_PDF}")
+        self.assertTrue(QUICK_REFERENCE_PDF.exists(), f"Missing sales quick reference PDF: {QUICK_REFERENCE_PDF}")
 
     def test_sales_guides_include_required_escalation_guidance(self) -> None:
         full_text = FULL_GUIDE.read_text(encoding="utf-8")
@@ -74,6 +81,34 @@ class SalesDocumentationTests(unittest.TestCase):
             latest_tool_change,
             "docs/salesperson-quick-reference.md should be reviewed and updated during documentation passes when tool files change.",
         )
+
+    def test_sales_pdfs_are_current_and_extractable(self) -> None:
+        self.assertGreaterEqual(
+            FULL_GUIDE_PDF.stat().st_mtime + FRESHNESS_TOLERANCE_SECONDS,
+            max(FULL_GUIDE.stat().st_mtime, PDF_GENERATOR.stat().st_mtime),
+            "docs/salesperson-user-guide.pdf should be regenerated after the markdown guide changes.",
+        )
+        self.assertGreaterEqual(
+            QUICK_REFERENCE_PDF.stat().st_mtime + FRESHNESS_TOLERANCE_SECONDS,
+            max(QUICK_REFERENCE.stat().st_mtime, PDF_GENERATOR.stat().st_mtime),
+            "docs/salesperson-quick-reference.pdf should be regenerated after the markdown guide changes.",
+        )
+
+        full_reader = PdfReader(str(FULL_GUIDE_PDF))
+        quick_reader = PdfReader(str(QUICK_REFERENCE_PDF))
+        self.assertGreaterEqual(len(full_reader.pages), 2)
+        self.assertGreaterEqual(len(quick_reader.pages), 1)
+
+        full_text = "\n".join(page.extract_text() or "" for page in full_reader.pages).lower()
+        quick_text = "\n".join(page.extract_text() or "" for page in quick_reader.pages).lower()
+
+        self.assertIn("dvrs planner", full_text)
+        self.assertIn("salesperson user guide", full_text)
+        self.assertIn("motorola solutions presales engineering", full_text)
+
+        self.assertIn("dvrs planner", quick_text)
+        self.assertIn("sales quick reference", quick_text)
+        self.assertIn("confirm that the information provided is accurate", quick_text)
 
 
 if __name__ == "__main__":

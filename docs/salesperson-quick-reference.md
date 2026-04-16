@@ -71,3 +71,7 @@ Motorola Solutions presales engineering may involve the DVRS product management 
 ## Maintenance Note
 
 This quick-reference guide and the full sales guide in `docs/salesperson-user-guide.md` should be reviewed during documentation passes whenever repository changes affect supported workflow, inputs, outputs, statuses, or escalation guidance.
+
+Maintain the matching PDF exports in `docs/salesperson-quick-reference.pdf` and `docs/salesperson-user-guide.pdf` during the same documentation pass.
+
+The repo front page in `README.md` and the release handoff workflow in `docs/release-process.md` both treat these PDF companions as release-ready user documents when they are delivered alongside the Windows executable.

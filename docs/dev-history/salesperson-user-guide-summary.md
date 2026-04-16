@@ -6,7 +6,7 @@ The repository already contained the current specification, bundled source artif
 
 ## 2. Problem Statement
 
-Sales-facing users needed a separate document that explains how to use the planner in practical quoting and qualification workflows, while preserving the product's documented limits around technical screening, regulatory uncertainty, and engineering escalation. The follow-up requirement also called for a shorter quick-reference version, better discoverability from the repository root, and an automated test that reminds maintainers to review these guides when the tool changes.
+Sales-facing users needed a separate document that explains how to use the planner in practical quoting and qualification workflows, while preserving the product's documented limits around technical screening, regulatory uncertainty, and engineering escalation. The follow-up requirement also called for a shorter quick-reference version, better discoverability from the repository root, automated maintenance tests, and styled PDF outputs that feel closer to the bundled DVR-LX ordering guide.
 
 ## 3. Key Decisions
 
@@ -28,7 +28,7 @@ Sales-facing users needed a separate document that explains how to use the plann
 
 ## 4. Implementation Summary
 
-Created `docs/salesperson-user-guide.md` as a dedicated sales-oriented user guide and added `docs/salesperson-quick-reference.md` as a shorter companion for quick field use. Updated `README.md` to link both guides directly and clarify that they should be reviewed during documentation passes when tool changes affect workflow, inputs, outputs, statuses, or escalation guidance. Added `tests/test_documentation.py` so the repository now checks that both guides exist, preserve the required escalation language, and are at least as recently updated as the tracked tool sources they are expected to follow.
+Created `docs/salesperson-user-guide.md` as a dedicated sales-oriented user guide and added `docs/salesperson-quick-reference.md` as a shorter companion for quick field use. Updated `README.md` to link both the markdown and PDF versions directly, then added a release-handoff note so the front page now matches the release playbook for companion user documents. Added `tests/test_documentation.py` so the repository now checks that both guides exist, preserve the required escalation language, and are at least as recently updated as the tracked tool sources they are expected to follow. Added `tools/generate_sales_doc_pdfs.py` and generated `docs/salesperson-user-guide.pdf` plus `docs/salesperson-quick-reference.pdf` with branded cover pages, revision blocks, and layout choices intended to feel similar in spirit to the bundled DVR-LX ordering guide. Audited `requirements.txt` and `requirements-desktop.txt`, retaining the desktop file structure and adding `pypdf` to `requirements.txt` because the maintained documentation and test workflow now depends on it. Updated `docs/release-process.md` so release preparation now explicitly includes regenerating and shipping the salesperson-facing PDF handoff documents when they are part of the executable deliverable set.
 
 ## 5. Challenges & Iterations
 
@@ -36,7 +36,7 @@ The main challenge was balancing a non-engineering audience with the technical a
 
 ## 6. Final Outcome
 
-The repository now contains both a full salesperson-targeted DVRS Planner guide and a separate quick-reference version, each aligned with the bundled references and current implementation documentation. The required escalation path is documented clearly and consistently with the product's conservative workflow assumptions, and the automated documentation test creates an explicit maintenance checkpoint for future tool changes.
+The repository now contains both a full salesperson-targeted DVRS Planner guide and a separate quick-reference version in markdown and PDF form, each aligned with the bundled references and current implementation documentation. The required escalation path is documented clearly and consistently with the product's conservative workflow assumptions, and the automated documentation tests now create explicit maintenance checkpoints for both the markdown sources and the generated PDFs.
 
 ## 7. Open Questions / Follow-ups
 
@@ -48,7 +48,11 @@ The repository now contains both a full salesperson-targeted DVRS Planner guide 
 - `README.md`
 - `docs/salesperson-user-guide.md`
 - `docs/salesperson-quick-reference.md`
+- `docs/salesperson-user-guide.pdf`
+- `docs/salesperson-quick-reference.pdf`
+- `docs/release-process.md`
 - `tests/test_documentation.py`
+- `tools/generate_sales_doc_pdfs.py`
 - `docs/dev-history/salesperson-user-guide-summary.md`
 - `docs/raw-threads/salesperson-user-guide.md`
 - `docs/dev-log.md`

@@ -15,10 +15,14 @@
 
 ## Sales documentation
 
-- Full guide: `docs/salesperson-user-guide.md`
-- Quick reference: `docs/salesperson-quick-reference.md`
+- Full guide (Markdown): `docs/salesperson-user-guide.md`
+- Full guide (PDF): `docs/salesperson-user-guide.pdf`
+- Quick reference (Markdown): `docs/salesperson-quick-reference.md`
+- Quick reference (PDF): `docs/salesperson-quick-reference.pdf`
 
 These sales documents should be reviewed and updated during the documentation pass whenever changes to the tool affect supported workflow, inputs, outputs, statuses, or escalation guidance.
+
+When these user documents are part of a release handoff, regenerate the PDFs with `python .\tools\generate_sales_doc_pdfs.py` and include the updated PDF companions in the normal source commit. The Windows release workflow in `docs/release-process.md` now treats these files as companion release materials when they are updated for delivery alongside the executable.
 
 ## Run tests
 
