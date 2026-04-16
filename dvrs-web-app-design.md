@@ -7,12 +7,12 @@ This specification was refreshed after reviewing the repository documentation, e
 ## 1. Constitution
 
 ### 1.1 Purpose
-Provide a planning aid for Motorola Solutions DVR-LX standard in-band DVRS configurations that helps a radio planner:
+Provide a planning aid for Motorola Solutions DVR-LX standard in-band DVRS configurations that helps a salesperson without detailed engineering knowledge:
 
 - enter the system frequencies the customer already has
 - evaluate standard 700 MHz and 800 MHz DVRS plans against those system frequencies
 - see which plans are technically valid, technically invalid, or technically plausible but coordination-dependent
-- produce an ordering-summary style output suitable for technician and procurement review
+- produce an ordering-summary style output suitable for entry into Motorola Solutions Configure-Price-Quote tool
 
 ### 1.2 Product Principles
 
@@ -68,8 +68,8 @@ Provide a planning aid for Motorola Solutions DVR-LX standard in-band DVRS confi
 
 ### 1.4 Out of Scope
 
-- active VHF technical plan support
-- active UHF technical plan support
+- active VHF technical plan support - targeted for future expansion
+- active UHF technical plan support - targeted for future expansion
 - direct FCC ULS or ISED license lookup
 - automatic coordination or final licensing approval
 - custom Motorola Solutions filter-plan synthesis
@@ -97,7 +97,7 @@ Regulatory status:
 ### 2.1 Source Constraints
 The current app encodes these working assumptions from the bundled references and later approved project decisions:
 
-- Only standard plans are treated as standard offerings; anything else requires vendor review.
+- Only standard plans are treated as standard offerings; anything else requires engineering review.
 - In-band filters are mechanically tuned and are not treated as field-retunable.
 - The ordering guide is the source of truth for fixed standard-plan ranges.
 - Later approved scope decisions refine how those ranges are evaluated, especially the requirement to return the remaining compliant DVRS slice instead of failing early.
@@ -183,7 +183,7 @@ Current encoded standard plans:
 The plan dataset is currently implemented in `dvrs_tool/plan_data.py` and protected by `dvrs_tool/plan_table_guard.py` so edits require explicit confirmation.
 
 ### 2.7 Parent-Plan and Submodel Evaluation
-The UI presents parent plans only. The engine may internally evaluate one or more compatible interpretations for a parent plan and select the best surviving result.
+The UI presents parent plans only. The engine may internally evaluate one or more compatible interpretations for a parent plan and select the best surviving result. The alignment of expected candidate sets was defined from the DVRS-LX Ordering Guide, and confirmed by interview with the product management team.
 
 Current expected candidate sets:
 
@@ -266,7 +266,7 @@ The shipped web UI presents three main panels:
    - PDF export action
 
 ### 2.11 Delivery Architecture
-The current repository is not a React/TypeScript app and should not be documented as one.
+The current repository started as a draft using React/TypeScript, but has since been modified. It is not a React/TypeScript app and should not be documented as one.
 
 Current shipped architecture:
 
@@ -302,7 +302,7 @@ Current shipped architecture:
 ### 3.2 Partially Implemented or Reserved
 
 - `use_latest_ordering_ruleset` exists but does not yet switch between multiple active rulesets
-- manual mobile RX override exists in the API model but is not exposed in the browser UI
+- manual mobile RX override exists in the API model but is not exposed in the browser UI - This is because the bands covered in this release are deterministic, so manual override is not relevant today
 - regulatory classification is intentionally conservative and still coarse compared with full licensing review
 
 ### 3.3 Not Implemented
