@@ -167,6 +167,7 @@ Use it to:
 - capture the proposed DVRS frequencies from the selected plan
 - preserve optional opportunity details such as agency name and radio/control-head selections
 - export a PDF summary for internal circulation or quote preparation
+- in the Windows desktop app, choose the save location from the native `Save As...` prompt that appears when you generate the PDF
 
 The generated PDF is an ordering-summary style document. It is useful for planning and communication, but it is not a final approved Motorola Solutions ordering artifact by itself.
 
@@ -190,7 +191,7 @@ When the tool cannot find a technically valid plan, first confirm the informatio
 
 This guide and `docs/salesperson-quick-reference.md` should be reviewed during documentation passes whenever repository changes affect supported workflow, inputs, outputs, statuses, or escalation guidance.
 
-Documentation review for release `0.1.2`: the current web and packaged desktop experiences carry Motorola Solutions branding assets in the application header and icon surfaces, the footer now shows the current build tag for support and version confirmation, and the release handoff uses versioned Windows build output folders, with no change to the planner workflow described above.
+Documentation review for release `0.1.3`: the packaged desktop app now prompts with a native `Save As...` dialog for ordering PDF generation instead of relying on the embedded browser's default download location, the development workflow now includes `requirements-dev.txt` with `pytest`, the footer still shows the current build tag for support and version confirmation, and the release handoff continues to use versioned Windows build output folders.
 
 Maintain the corresponding PDF exports in `docs/salesperson-user-guide.pdf` and `docs/salesperson-quick-reference.pdf` at the same time so the shared repo handoff materials stay current.
 

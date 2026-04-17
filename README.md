@@ -14,6 +14,7 @@
 - `tests/test_documentation.py`: documentation freshness and maintenance checks
 - `run_tests.py`: test runner
 - `requirements.txt`: API dependencies
+- `requirements-dev.txt`: development and test dependencies
 
 ## Project specification
 
@@ -37,6 +38,8 @@ When these user documents are part of a release handoff, regenerate the PDFs wit
 ```powershell
 python run_tests.py
 ```
+
+If `pytest` is installed, `run_tests.py` will use it automatically. Otherwise it falls back to the built-in `unittest` runner.
 
 ## Run the API
 
@@ -66,6 +69,12 @@ Install the desktop runtime dependencies first:
 python -m pip install -r requirements-desktop.txt
 ```
 
+For local development and testing, install the full dev toolchain instead:
+
+```powershell
+python -m pip install -r requirements-dev.txt
+```
+
 Launch the planner in its own desktop window:
 
 ```powershell
@@ -84,11 +93,11 @@ This branch now includes a PyInstaller spec for a windowed desktop build:
 .\build_windows.ps1
 ```
 
-The packaged executable will be written under a versioned output folder derived from the application version in `dvrs_tool/api.py`. For example, version `0.1.2` builds to `dist-release-012\DVRSPlanner.exe` and uses `build-release-012\` for PyInstaller work files.
+The packaged executable will be written under a versioned output folder derived from the application version in `dvrs_tool/api.py`. For example, version `0.1.3` builds to `dist-release-013\DVRSPlanner.exe` and uses `build-release-013\` for PyInstaller work files.
 
 During `-Clean`, the script now retries locked-folder cleanup briefly before failing. If the matching versioned output folder remains locked after those retries, the script stops and tells the editor to either release the lock or bump the version tag before retrying the build.
 
-The local build artifact is the versioned executable path such as `dist-release-012\DVRSPlanner.exe`. This file is intentionally not committed to normal Git history because the packaged WebEngine-based desktop binary is larger than GitHub's standard file-size limit. Publish the executable through GitHub Releases instead.
+The local build artifact is the versioned executable path such as `dist-release-013\DVRSPlanner.exe`. This file is intentionally not committed to normal Git history because the packaged WebEngine-based desktop binary is larger than GitHub's standard file-size limit. Publish the executable through GitHub Releases instead.
 
 ## Desktop packaging notes
 
@@ -102,13 +111,13 @@ The local build artifact is the versioned executable path such as `dist-release-
 
 ## Publish a Windows release
 
-Use the documented playbook in `docs/release-process.md` when you need to publish a Windows executable for a tagged release such as DVRS Planner `0.1.2`.
+Use the documented playbook in `docs/release-process.md` when you need to publish a Windows executable for a tagged release such as DVRS Planner `0.1.3`.
 
 Do not treat the Windows release as complete until:
 
 - the annotated release tag has been created locally and pushed to GitHub
-- `git ls-remote --tags origin v0.1.2 v0.1.2^{}` confirms the remote tag target
-- `gh release view v0.1.2` confirms the published tag, title, and `DVRSPlanner.exe` asset
+- `git ls-remote --tags origin v0.1.3 v0.1.3^{}` confirms the remote tag target
+- `gh release view v0.1.3` confirms the published tag, title, and `DVRSPlanner.exe` asset
 
 ## Troubleshooting packaged startup
 

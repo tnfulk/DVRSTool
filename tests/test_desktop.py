@@ -2,12 +2,36 @@
 
 from __future__ import annotations
 
-import io
 import sys
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from dvrs_tool import desktop
+
+
+class FakeDownload:
+    def __init__(self, filename: str = "dvrs-ordering-summary.pdf") -> None:
+        self.filename = filename
+        self.download_directory = None
+        self.download_file_name = None
+        self.accepted = False
+        self.cancelled = False
+
+    def downloadFileName(self) -> str:
+        return self.filename
+
+    def setDownloadDirectory(self, value: str) -> None:
+        self.download_directory = value
+
+    def setDownloadFileName(self, value: str) -> None:
+        self.download_file_name = value
+
+    def accept(self) -> None:
+        self.accepted = True
+
+    def cancel(self) -> None:
+        self.cancelled = True
 
 
 class DesktopRuntimeTests(unittest.TestCase):
@@ -57,6 +81,35 @@ class DesktopRuntimeTests(unittest.TestCase):
                 desktop._configure_runtime_logging()
 
         basic_config.assert_not_called()
+
+    def test_prompt_for_download_path_uses_selected_save_location(self) -> None:
+        download = FakeDownload()
+        selected_path = Path("C:/Users/tester/Documents/custom-ordering.pdf")
+
+        desktop._prompt_for_download_path(
+            download,
+            lambda default_path: (str(selected_path), "PDF Files (*.pdf)"),
+            default_dir=Path("C:/Users/tester/Downloads"),
+        )
+
+        self.assertEqual(download.download_directory, str(selected_path.parent))
+        self.assertEqual(download.download_file_name, selected_path.name)
+        self.assertTrue(download.accepted)
+        self.assertFalse(download.cancelled)
+
+    def test_prompt_for_download_path_cancels_when_user_dismisses_dialog(self) -> None:
+        download = FakeDownload()
+
+        desktop._prompt_for_download_path(
+            download,
+            lambda default_path: ("", "PDF Files (*.pdf)"),
+            default_dir=Path("C:/Users/tester/Downloads"),
+        )
+
+        self.assertTrue(download.cancelled)
+        self.assertFalse(download.accepted)
+        self.assertIsNone(download.download_directory)
+        self.assertIsNone(download.download_file_name)
 
 
 if __name__ == "__main__":

@@ -116,7 +116,8 @@ def _run_qt_window(runtime: DesktopRuntime) -> int:
     try:
         from PySide6.QtCore import QUrl
         from PySide6.QtGui import QIcon
-        from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox
+        from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox
+        from PySide6.QtWebEngineCore import QWebEngineDownloadRequest
         from PySide6.QtWebEngineWidgets import QWebEngineView
     except ImportError as exc:
         raise MissingDependencyError(
@@ -140,7 +141,19 @@ def _run_qt_window(runtime: DesktopRuntime) -> int:
             self.browser = QWebEngineView(self)
             self.browser.load(QUrl(f"{runtime.base_url}/"))
             self.browser.renderProcessTerminated.connect(self._handle_render_process_terminated)
+            self.browser.page().profile().downloadRequested.connect(self._handle_download_requested)
             self.setCentralWidget(self.browser)
+
+        def _handle_download_requested(self, download: QWebEngineDownloadRequest) -> None:
+            _prompt_for_download_path(
+                download,
+                lambda default_path: QFileDialog.getSaveFileName(
+                    self,
+                    "Save Ordering PDF",
+                    str(default_path),
+                    "PDF Files (*.pdf);;All Files (*)",
+                ),
+            )
 
         def _handle_render_process_terminated(self, termination_status, exit_code) -> None:
             QMessageBox.critical(
@@ -197,6 +210,25 @@ def _should_log_to_file() -> bool:
 
 def _desktop_log_path() -> Path:
     return Path(tempfile.gettempdir()) / DESKTOP_LOG_FILENAME
+
+
+def _prompt_for_download_path(
+    download: Any,
+    save_file_name,
+    default_dir: Path | None = None,
+) -> None:
+    suggested_name = download.downloadFileName() or "dvrs-ordering-summary.pdf"
+    base_dir = default_dir or Path.home()
+    default_path = base_dir / suggested_name
+    selected_path, _ = save_file_name(default_path)
+    if not selected_path:
+        download.cancel()
+        return
+
+    target_path = Path(selected_path)
+    download.setDownloadDirectory(str(target_path.parent))
+    download.setDownloadFileName(target_path.name)
+    download.accept()
 
 
 def _uvicorn_config_kwargs(app: Any, host: str, port: int) -> dict[str, Any]:

@@ -45,6 +45,7 @@ If one or more plans are technically valid:
 - use the candidate plans to guide the quote conversation
 - capture the proposed DVRS TX and DVRS RX
 - use the quote draft and PDF summary for internal follow-up
+- in the Windows desktop app, choose the destination from the native `Save As...` prompt when generating the PDF
 - do not describe the result as final licensing approval
 
 If the result is technically valid but `COORDINATION_REQUIRED`:
@@ -72,7 +73,7 @@ Motorola Solutions presales engineering may involve the DVRS product management 
 
 This quick-reference guide and the full sales guide in `docs/salesperson-user-guide.md` should be reviewed during documentation passes whenever repository changes affect supported workflow, inputs, outputs, statuses, or escalation guidance.
 
-Documentation review for release `0.1.2`: the current web and packaged desktop experiences carry Motorola Solutions branding assets in the application header and icon surfaces, the footer now shows the current build tag for support and version confirmation, and the release handoff uses versioned Windows build output folders, with no change to the planner workflow described above.
+Documentation review for release `0.1.3`: the packaged desktop app now prompts with a native `Save As...` dialog for ordering PDF generation, the development workflow now includes `requirements-dev.txt` with `pytest`, the footer still shows the current build tag for support and version confirmation, and the release handoff continues to use versioned Windows build output folders.
 
 Maintain the matching PDF exports in `docs/salesperson-quick-reference.pdf` and `docs/salesperson-user-guide.pdf` during the same documentation pass.
 

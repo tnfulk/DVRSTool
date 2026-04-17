@@ -8,7 +8,7 @@ from .exceptions import DVRSBaseError, MissingDependencyError
 from .models import CalculationRequest, Country, SystemBandHint
 from .pdf_export import build_ordering_summary_pdf
 
-APP_VERSION = "0.1.2"
+APP_VERSION = "0.1.3"
 
 
 def create_app():

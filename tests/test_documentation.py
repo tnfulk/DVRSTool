@@ -115,12 +115,12 @@ class SalesDocumentationTests(unittest.TestCase):
         readme_text = README.read_text(encoding="utf-8").lower()
 
         self.assertIn("do not rely on `gh release create` to create the tag automatically", release_text)
-        self.assertIn("git ls-remote --tags origin v0.1.2 v0.1.2^{}", release_text)
-        self.assertIn("gh release view v0.1.2", release_text)
+        self.assertIn("git ls-remote --tags origin v0.1.3 v0.1.3^{}", release_text)
+        self.assertIn("gh release view v0.1.3", release_text)
         self.assertIn("remote tag target", release_text)
 
-        self.assertIn("gh release view v0.1.2", readme_text)
-        self.assertIn("git ls-remote --tags origin v0.1.2 v0.1.2^{}", readme_text)
+        self.assertIn("gh release view v0.1.3", readme_text)
+        self.assertIn("git ls-remote --tags origin v0.1.3 v0.1.3^{}", readme_text)
 
 
 if __name__ == "__main__":
