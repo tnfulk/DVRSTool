@@ -2,6 +2,8 @@
 
 ## Files
 
+- `dvrs-tool-design.md`: primary constitution and specification document
+- `dvrs-web-app-design.md`: deeper technical companion specification and rule reference
 - `dvrs_tool/engine.py`: calculation engine
 - `dvrs_tool/api.py`: FastAPI wrapper
 - `dvrs_tool/desktop.py`: embedded desktop launcher and packaged-runtime safeguards
@@ -12,6 +14,12 @@
 - `tests/test_documentation.py`: documentation freshness and maintenance checks
 - `run_tests.py`: test runner
 - `requirements.txt`: API dependencies
+
+## Project specification
+
+Use `dvrs-tool-design.md` as the primary project constitution and specification document.
+
+Maintain `dvrs-web-app-design.md` as the deeper technical companion reference. Future development should continue to consult and update both documents when behavior, rules, workflow assumptions, or architecture guidance changes so detailed project knowledge is not lost.
 
 ## Sales documentation
 

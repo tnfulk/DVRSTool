@@ -18,13 +18,17 @@ No task is complete until documentation has been created or updated.
 
 ## Spec-First Execution
 
-`dvrs-web-app-design.md` is the primary project specification and the default source of truth for product intent, scope, workflow, and acceptance targets.
+`dvrs-tool-design.md` is the primary project specification and the default source of truth for product intent, scope, workflow, and acceptance targets.
+
+`dvrs-web-app-design.md` is the deeper technical companion reference. It remains a core project document and must continue to be reviewed and maintained so detailed rule interpretations, implementation guidance, and accumulated acceptance nuances are not lost.
 
 Codex must:
 - review the current specification before making meaningful product changes
+- review `dvrs-web-app-design.md` as the technical companion whenever the task touches rule logic, workflow behavior, architecture assumptions, or acceptance detail
 - work from the spec instead of ad hoc prompt drift whenever the spec covers the task
 - identify conflicts between the spec, repository behavior, and user requests before changing implemented behavior
-- update the specification when project decisions materially change scope, workflow, architecture, or acceptance expectations
+- update `dvrs-tool-design.md` when project decisions materially change scope, workflow, architecture, or acceptance expectations
+- update `dvrs-web-app-design.md` when the deeper technical reference needs to preserve detailed behavior, rationale, or implementation guidance for those same changes
 
 If the specification is incomplete for a requested task, Codex should make the smallest reasonable assumption, state it, and prefer updating the spec so future conversations inherit the decision.
 

@@ -4,6 +4,12 @@ Last reviewed against the repository implementation: `2026-04-12`
 
 This specification was refreshed after reviewing the repository documentation, engine, API, static web UI, desktop wrapper, and tests. It is intended to describe the current project state plus germane future roadmap items, not an aspirational architecture that the repo does not yet implement.
 
+Companion document note:
+
+- `dvrs-tool-design.md` is now the repository's primary constitution and specification document.
+- This file remains the deeper technical companion reference and should continue to be maintained alongside the primary spec.
+- When future work changes rule behavior, workflow assumptions, architecture boundaries, or acceptance detail, update this document as needed so the project's accumulated technical guidance is preserved.
+
 ## 0. Problem Statement
 
 This project addresses a planning problem faced by Motorola Solutions sales and planning stakeholders who need to recommend a standard in-band DVRS configuration without doing a manual engineering review for every quote.
